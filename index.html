@@ -193,7 +193,6 @@ button{font:inherit;}
     <button class="btn block" id="add-leg" type="button">+ Add leg</button>
     <button class="btn primary block" id="set-save">Save</button>
     <div class="small" style="margin-top:8px" id="lbl-note">Addresses are geocoded once and stored on this device only.</div>
-    <div class="small" style="margin-top:4px; opacity:.5">v20261012f</div>
   </div>
 </div>
 
@@ -950,7 +949,7 @@ function renderLegs(legResults, box){
       let html='<div class="leg-head">'+lineBadge(leg.line)+'<span class="dot '+dotCls(st.cls)+'" title="'+esc(sevLabel(st.cls))+'"></span><span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span></div>';
       if(r.trip){
         const _m=Math.max(0,Math.round((r.trip.bt-Date.now()/1000)/60));
-        html+='<div class="leg-time">'+(_m<=0?lineBadge(leg.line)+' <b>boarding now</b>':lineBadge(leg.line)+' leaves at <b>'+fmtClock(r.trip.bt)+'</b> <span class="leg-sub">(in '+_m+'min)</span>')+'</div>';
+        html+='<div class="leg-time">'+(_m<=0?'<b>'+esc(leg.line)+' boarding now</b>':esc(leg.line)+' leaves at <b>'+fmtClock(r.trip.bt)+'</b> <span class="leg-sub">(in '+_m+'min)</span>')+'</div>';
       }else if(!r.feedOk){
         html+='<div class="leg-sub">'+esc(t("no_feed",{line:leg.line}))+'</div>';
       }else{
@@ -968,10 +967,10 @@ function renderLegs(legResults, box){
       td.className="leg transfer";
       let th='<div class="leg-head">'+lineBadge(leg.line)+'<span class="dot '+dotCls(st.cls)+'" title="'+esc(sevLabel(st.cls))+'"></span><span>'+esc(t("transfer_at",{station:stationName(prev.leg.to)}))+'</span></div>';
       if(t1&&t1.at){
-        th+='<div class="leg-time">'+lineBadge(prev.leg.line)+' arrives at <b>'+fmtClock(t1.at)+'</b></div>';
+        th+='<div class="leg-time">'+esc(prev.leg.line)+' arrives at <b>'+fmtClock(t1.at)+'</b></div>';
         if(t2){
           const wait=Math.max(0,Math.round((t2.bt-t1.at)/60));
-          th+='<div class="leg-time">'+lineBadge(leg.line)+' leaves at <b>'+fmtClock(t2.bt)+'</b></div>';
+          th+='<div class="leg-time">'+esc(leg.line)+' leaves at <b>'+fmtClock(t2.bt)+'</b></div>';
           th+='<div class="leg-sub">'+(wait>0?t("transfer_wait",{n:wait}):t("transfer_now"))+'.</div>';
         }else{
           th+='<div class="leg-sub">'+esc(t("waiting_conn",{line:leg.line}))+'</div>';
@@ -1447,9 +1446,9 @@ function initSettings(){
     S.legs.push({line:"", from:"", to:""});
     saveSettings(); renderLegEditors();
   };
-  $("sheet-close").onclick=()=>{ $("sheet").classList.remove("open"); loadAll(); };
-  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); const c=$("sheet-card"); if(c){ void c.offsetHeight; c.scrollTop=0; } };
-  $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")){ $("sheet").classList.remove("open"); loadAll(); } });
+  $("sheet-close").onclick=()=>{ $("sheet").classList.remove("open"); };
+  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); };
+  $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").classList.remove("open"); });
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();
     const btn=$("set-save");
@@ -1477,7 +1476,7 @@ function initSettings(){
 }
 
 /* ===== init ===== */
-setInterval(()=>{ if(!document.hidden && !$("sheet").classList.contains("open")) loadAll(); }, 30000);
+setInterval(()=>{ if(!document.hidden) loadAll(); }, 30000);
 document.querySelectorAll("#dir-toggle .seg-btn").forEach(b=>{
   b.onclick=()=>{
     if(S.direction!==b.dataset.dir){

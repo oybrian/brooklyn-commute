@@ -972,7 +972,7 @@ function renderLegs(legResults, box){
         th+='<div class="leg-time">'+t("your_arrives",{line:esc(prev.leg.line),time:fmtClock(t1.at)})+'</div>';
         if(t2){
           const wait=Math.max(0,Math.round((t2.bt-t1.at)/60));
-          th+='<div class="leg-time">'+nxHtml(leg.line,t2.bt)+' <span class="leg-sub">('+fmtClock(t2.bt)+')</span></div>';
+          th+='<div class="leg-time">'+esc(leg.line)+' leaves at <b>'+fmtClock(t2.bt)+'</b></div>';
           th+='<div class="leg-sub">'+(wait>0?t("transfer_wait",{n:wait}):t("transfer_now"))+'.</div>';
         }else{
           th+='<div class="leg-sub">'+esc(t("waiting_conn",{line:leg.line}))+'</div>';

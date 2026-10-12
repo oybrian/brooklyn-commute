@@ -35,11 +35,10 @@ body{margin:0; background:var(--bg); color:var(--text);
   margin:0 0 10px; font-weight:600;}
 .row{display:flex; align-items:center; justify-content:space-between; gap:8px;}
 /* weather */
-.wx-temp{font-size:52px; font-weight:200; letter-spacing:-.02em; font-variant-numeric:tabular-nums; line-height:1;}
-.wx-sub{color:var(--muted); font-size:14px; margin-top:4px;}
-.wx-icon{font-size:44px; margin-right:10px; vertical-align:middle;}
-.wx-extra{display:flex; gap:16px; margin-top:12px; font-size:13px; color:var(--muted);}
-.wx-extra b{color:var(--text); font-weight:600;}
+.tier-wxstrip{padding:10px 16px;}
+.wx-strip{font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums;}
+.wx-strip .wx-icon{font-size:18px; margin-right:6px;}
+.wx-strip b{font-weight:700;}
 /* iOS segmented control */
 .seg{display:flex; background:var(--seg); border-radius:12px; padding:2px; margin-bottom:12px;}
 .seg-btn{flex:1; border:none; background:transparent; border-radius:10px; padding:8px 0;
@@ -121,19 +120,8 @@ button{font:inherit;}
   </div>
   <div id="err" class="err" style="display:none"></div>
 
-  <section class="tier" id="tier-weather">
-    <h2 id="h-weather">Weather</h2>
-    <div class="row">
-      <div>
-        <div class="wx-temp" id="wx-temp">&ndash;</div>
-        <div class="wx-sub" id="wx-desc">&ndash;</div>
-      </div>
-      <div style="text-align:right">
-        <div class="wx-sub" id="wx-hilo">&ndash;</div>
-        <div class="wx-sub" id="wx-feel"></div>
-      </div>
-    </div>
-    <div class="wx-extra" id="wx-extra"></div>
+  <section class="tier tier-wxstrip" id="tier-weather">
+    <div class="wx-strip" id="wx-strip">&ndash;</div>
   </section>
 
   <section class="tier" id="tier-route">
@@ -224,7 +212,7 @@ route_legs:"Route legs",legs_hint:"One per train — no transfer? Just use one l
 leg_n:"Leg {n}",board:"Board",get_off:"Get off",remove:"× Remove",add_leg:"+ Add leg",
 save:"Save",saving:"Saving…",addr_note:"Addresses are geocoded once and stored on this device only.",
 max_legs:"Maximum 4 legs.",station_ph:"Type station name…",
-to_work:"To Work",to_home:"To Home",your_route:"Your route",weather_h:"Weather",alternatives:"Alternatives",
+to_work:"To Work",to_home:"To Home",your_route:"Your route",alternatives:"Alternatives",
 wind:"Wind",rain:"Rain",home:"home",work:"work",
 walk_to:"Walk ~{min} min from {place} to {station}",
 add_addr:"Add your {place} address in Settings for walk time.",
@@ -256,7 +244,7 @@ route_legs:"경로 구간",legs_hint:"타는 열차마다 하나씩 — 환승 �
 leg_n:"구간 {n}",board:"탑승",get_off:"하차",remove:"× 삭제",add_leg:"+ 구간 추가",
 save:"저장",saving:"저장 중…",addr_note:"주소는 한 번만 변환되어 이 기기에만 저장됩니다.",
 max_legs:"최대 4개 구간.",station_ph:"역 이름 입력…",
-to_work:"출근",to_home:"퇴근",your_route:"내 경로",weather_h:"날씨",alternatives:"대체 경로",
+to_work:"출근",to_home:"퇴근",your_route:"내 경로",alternatives:"대체 경로",
 wind:"바람",rain:"강수",home:"집",work:"직장",
 walk_to:"{place}에서 {station}까지 도보 약 {min}분",
 add_addr:"도보 시간을 보려면 설정에서 {place} 주소를 입력하세요.",
@@ -288,7 +276,7 @@ route_legs:"路线段",legs_hint:"每乘一趟车一段 — 不换乘？只用�
 leg_n:"第 {n} 段",board:"上车",get_off:"下车",remove:"× 删除",add_leg:"+ 添加路段",
 save:"保存",saving:"保存中…",addr_note:"地址仅转换一次，只保存在此设备上。",
 max_legs:"最多 4 段。",station_ph:"输入车站名称…",
-to_work:"上班",to_home:"下班",your_route:"我的路线",weather_h:"天气",alternatives:"备选路线",
+to_work:"上班",to_home:"下班",your_route:"我的路线",alternatives:"备选路线",
 wind:"风",rain:"降水",home:"家",work:"公司",
 walk_to:"从{place}步行约 {min} 分钟到{station}",
 add_addr:"请在设置中输入{place}地址以显示步行时间。",
@@ -320,7 +308,7 @@ route_legs:"経路区間",legs_hint:"乗る電車ごとに1区間 — 乗換な�
 leg_n:"区間 {n}",board:"乗車",get_off:"下車",remove:"× 削除",add_leg:"+ 区間を追加",
 save:"保存",saving:"保存中…",addr_note:"住所は一度だけ変換され、このデバイスにのみ保存されます。",
 max_legs:"最大4区間。",station_ph:"駅名を入力…",
-to_work:"出勤",to_home:"帰宅",your_route:"マイルート",weather_h:"天気",alternatives:"代替ルート",
+to_work:"出勤",to_home:"帰宅",your_route:"マイルート",alternatives:"代替ルート",
 wind:"風",rain:"降水",home:"自宅",work:"職場",
 walk_to:"{place}から{station}まで徒歩約{min}分",
 add_addr:"徒歩時間を表示するには設定で{place}の住所を入力してください。",
@@ -352,7 +340,7 @@ route_legs:"Tramos de ruta",legs_hint:"Uno por tren — ¿sin transbordo? Usa so
 leg_n:"Tramo {n}",board:"Subir",get_off:"Bajar",remove:"× Eliminar",add_leg:"+ Añadir tramo",
 save:"Guardar",saving:"Guardando…",addr_note:"Las direcciones se geocodifican una vez y se guardan solo en este dispositivo.",
 max_legs:"Máximo 4 tramos.",station_ph:"Escribe el nombre de la estación…",
-to_work:"Al trabajo",to_home:"A casa",your_route:"Tu ruta",weather_h:"Clima",alternatives:"Alternativas",
+to_work:"Al trabajo",to_home:"A casa",your_route:"Tu ruta",alternatives:"Alternativas",
 wind:"Viento",rain:"Lluvia",home:"casa",work:"trabajo",
 walk_to:"Camina ~{min} min desde {place} hasta {station}",
 add_addr:"Añade tu dirección de {place} en Ajustes para ver el tiempo a pie.",
@@ -384,7 +372,7 @@ route_legs:"Segments du trajet",legs_hint:"Un par train — sans correspondance 
 leg_n:"Segment {n}",board:"Embarquement",get_off:"Descente",remove:"× Supprimer",add_leg:"+ Ajouter un segment",
 save:"Enregistrer",saving:"Enregistrement…",addr_note:"Les adresses sont géocodées une fois et stockées uniquement sur cet appareil.",
 max_legs:"4 segments maximum.",station_ph:"Nom de la station…",
-to_work:"Aller au travail",to_home:"Rentrer",your_route:"Votre trajet",weather_h:"Météo",alternatives:"Alternatives",
+to_work:"Aller au travail",to_home:"Rentrer",your_route:"Votre trajet",alternatives:"Alternatives",
 wind:"Vent",rain:"Pluie",home:"domicile",work:"travail",
 walk_to:"~{min} min à pied depuis {place} jusqu'à {station}",
 add_addr:"Ajoutez votre adresse ({place}) dans Réglages pour le temps de marche.",
@@ -777,16 +765,15 @@ async function findFastRoutes(legResults){
 function dotCls(cls){ return cls==="green"?"green":cls; }
 function renderWeather(w){
   try{
-    const cur=w.current, daily=w.daily;
-    $("wx-temp").textContent=tempBoth(cur.temperature_2m);
-    const code=cur.weather_code;
-    $("wx-desc").innerHTML='<span class="wx-icon">'+(WMO_ICON[code]||"")+'</span>'+esc(wmoText(code));
-    $("wx-hilo").textContent="H "+tempBoth(daily.temperature_2m_max[0])+" · L "+tempBoth(daily.temperature_2m_min[0]);
+    const cur=w.current, daily=w.daily, code=cur.weather_code;
+    const hi=Math.round(daily.temperature_2m_max[0])+"°", lo=Math.round(daily.temperature_2m_min[0])+"°";
     const wind=cur.wind_speed_10m!=null?Math.round(cur.wind_speed_10m)+" mph":"—";
     const rain=daily.precipitation_probability_max&&daily.precipitation_probability_max[0]!=null?daily.precipitation_probability_max[0]+"%":"—";
-    $("wx-extra").innerHTML='<span>💨 '+t("wind")+' <b>'+wind+'</b></span><span>🌧️ '+t("rain")+' <b>'+rain+'</b></span>';
+    $("wx-strip").innerHTML='<span class="wx-icon">'+(WMO_ICON[code]||"")+'</span>'+
+      '<b>'+tempBoth(cur.temperature_2m)+'</b> '+esc(wmoText(code))+
+      ' <span style="color:var(--muted)">· H '+hi+' L '+lo+' · 💨 '+wind+' · 🌧️ '+rain+'</span>';
   }catch(e){
-    $("wx-temp").textContent="—";
+    $("wx-strip").textContent="—";
   }
 }
 function renderLegs(legResults, box){
@@ -1113,7 +1100,6 @@ function renderLegEditors(){
 }
 function applyI18n(){
   document.title="StandClear";
-  $("h-weather").textContent=t("weather_h");
   $("h-route").textContent=t("your_route");
   $("h-alt").textContent=t("alternatives");
   document.querySelectorAll("#dir-toggle .seg-btn").forEach(x=>{

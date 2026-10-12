@@ -57,7 +57,8 @@ body{margin:0; background:var(--bg); color:var(--text);
 .badge{display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px;
   border-radius:10px; font-weight:700; font-size:17px; color:#fff; padding:0 9px; margin-right:10px;
   box-shadow:0 1px 2px rgba(0,0,0,.12);}
-.dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:7px; flex:none;}
+.dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:2px; flex:none;}
+.leg-head .dot{width:11px; height:11px; margin:0 10px 0 2px;}
 .dot.green{background:var(--green);} .dot.amber{background:var(--amber);}
 .dot.red{background:var(--red);} .dot.blue{background:var(--blue);} .dot.gray{background:#c7c7cc;}
 /* route legs */
@@ -81,7 +82,6 @@ body{margin:0; background:var(--bg); color:var(--text);
 .leg-time b{font-size:17px; font-weight:700; letter-spacing:-.01em; font-variant-numeric:tabular-nums;}
 .transfer{background:var(--bg);}
 .alert-text{font-size:13px; color:var(--muted); margin-top:8px; line-height:1.5;}
-.status-line{display:flex; align-items:center; font-size:14px; font-weight:600; margin-top:8px;}
 button{font:inherit;}
 .btn{background:var(--seg); color:var(--text); border:none; border-radius:12px;
   padding:10px 14px; font-weight:600; cursor:pointer;}
@@ -952,8 +952,7 @@ function renderLegs(legResults, box, arrWalkMin){
       // first leg: full card with boarding countdown
       const d=document.createElement("div");
       d.className="leg";
-      let html='<div class="leg-head">'+lineBadge(leg.line)+'<span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span></div>';
-      html+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(sevLabel(st.cls))+'</div>';
+      let html='<div class="leg-head">'+lineBadge(leg.line)+'<span class="dot '+dotCls(st.cls)+'" title="'+esc(sevLabel(st.cls))+'"></span><span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span></div>';
       if(r.trip){
         html+='<div class="leg-time">'+cdHtml(r.trip.bt)+' <span class="leg-sub">('+fmtClock(r.trip.bt)+')</span></div>';
       }else if(!r.feedOk){
@@ -971,8 +970,7 @@ function renderLegs(legResults, box, arrWalkMin){
       const t1=prev.trip, t2=r.trip;
       const td=document.createElement("div");
       td.className="leg transfer";
-      let th='<div class="leg-head">'+lineBadge(leg.line)+'<span>'+esc(t("transfer_at",{station:stationName(prev.leg.to)}))+'</span></div>';
-      th+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(sevLabel(st.cls))+'</div>';
+      let th='<div class="leg-head">'+lineBadge(leg.line)+'<span class="dot '+dotCls(st.cls)+'" title="'+esc(sevLabel(st.cls))+'"></span><span>'+esc(t("transfer_at",{station:stationName(prev.leg.to)}))+'</span></div>';
       if(t1&&t1.at){
         th+='<div class="leg-time">'+t("your_arrives",{line:esc(prev.leg.line),time:fmtClock(t1.at)})+'</div>';
         if(t2){

@@ -1320,11 +1320,13 @@ async function loadAll(){
   });
   try{
     const o=originInfo();
+    // Weather loads in parallel — never blocks train data
+    if(o.lat!=null&&o.lon!=null){
+      Promise.all([fetchWeather(o.lat,o.lon).catch(()=>null), fetchNwsAlerts(o.lat,o.lon).catch(()=>[])])
+        .then(([wx,nws])=>{ if(wx) renderWeather(wx,nws); });
+    }
     await fetchStatus().catch(()=>{});
     renderPlanned();
-    const wx=await fetchWeather(o.lat,o.lon).catch(()=>null);
-    const nws=(o.lat!=null&&o.lon!=null)?await fetchNwsAlerts(o.lat,o.lon).catch(()=>[]):[];
-    if(wx) renderWeather(wx, nws);
     if(viewingAlt){
       await renderAltDetail(viewingAlt);
     }else{

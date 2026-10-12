@@ -945,7 +945,7 @@ function makeTappable(cardEl, key, leg, trip){
     loadTtInto(ttEl, leg, trip.bt);
   }
 }
-function renderLegs(legResults, box){
+function renderLegs(legResults, box, arrWalkMin){
   legResults.forEach((r,i)=>{
     const leg=r.leg, st=statusOf(leg.line);
     if(i===0){
@@ -994,10 +994,17 @@ function renderLegs(legResults, box){
       const trip=r.trip;
       const fd=document.createElement("div");
       fd.className="leg";
-      fd.innerHTML='<div class="leg-head">'+esc(t("arrive",{station:stationName(leg.to)}))+'</div>'+
-        (trip&&trip.at
-          ? '<div class="leg-time">'+t("est_arrival",{time:fmtClock(trip.at)})+'</div>'
-          : '<div class="leg-sub">'+esc(t("arr_unavailable"))+'</div>');
+      let fh='<div class="leg-head">'+esc(t("arrive",{station:stationName(leg.to)}))+'</div>';
+      if(trip&&trip.at){
+        fh+='<div class="leg-time">'+t("est_arrival",{time:fmtClock(trip.at)})+'</div>';
+        if(arrWalkMin!=null){
+          const aIcon=S.direction==="commute"?"🏢":"🏠";
+          fh+='<div class="leg-time">'+aIcon+' <b>'+fmtClock(trip.at+arrWalkMin*60)+'</b></div>';
+        }
+      }else{
+        fh+='<div class="leg-sub">'+esc(t("arr_unavailable"))+'</div>';
+      }
+      fd.innerHTML=fh;
       box.appendChild(fd);
     }
   });
@@ -1008,7 +1015,7 @@ function renderLegs(legResults, box){
     box.appendChild(n);
   }
 }
-function renderRoute(legResults, walkMin){
+function renderRoute(legResults, walkMin, arrWalkMin){
   const box=$("legs");
   box.innerHTML="";
   const firstSt=stationName(legResults[0].leg.from);
@@ -1034,12 +1041,12 @@ function renderRoute(legResults, walkMin){
       lv.innerHTML="🚶 "+t("leave_by",{time:fmtClock(leaveBy),line:esc(line),traintime:fmtClock(target.bt)});
       box.appendChild(w);
       box.appendChild(lv);
-      renderLegs(legResults, box);
+      renderLegs(legResults, box, arrWalkMin);
       return;
     }
   }
   box.appendChild(w);
-  renderLegs(legResults, box);
+  renderLegs(legResults, box, arrWalkMin);
 }
 function renderAlts(options, legResults){
   const box=$("alts");
@@ -1253,7 +1260,17 @@ async function loadAll(){
             legResults=await computeRoute(legs, Math.floor(nowSec+walkMin*60));
           }
         }
-        renderRoute(legResults, walkMin);
+        // final walk: last station -> destination (home/work arrival time)
+        // manual times are symmetric: station->work ~= work->station
+        let arrWalkMin=S.direction==="commute"?S.walkHomebound:S.walkCommute;
+        if(arrWalkMin==null){
+          try{
+            const dest=S.direction==="commute"?S.work:S.home;
+            const ls=ST_BY_ID[legResults[legResults.length-1].leg.to];
+            if(dest.lat!=null&&dest.lon!=null&&ls) arrWalkMin=await walkMinutes(ls.lat,ls.lon,dest.lat,dest.lon);
+          }catch(e){}
+        }
+        renderRoute(legResults, walkMin, arrWalkMin);
         const alts=hasDisruption(legResults)?await findFastRoutes(legResults):[];
         renderAlts(alts, legResults);
       }

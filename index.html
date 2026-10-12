@@ -723,6 +723,7 @@ for(let i=0;i<STATIONS.length;i++){
 function autoLegs(){
   const h=S.home, w=S.work;
   if(h.lat==null||h.lon==null||w.lat==null||w.lon==null) return null;
+  if(havKm(h.lat,h.lon,w.lat,w.lon)<0.5) return null;
   const nearH=STATIONS.map(s=>({s:s, d:havKm(h.lat,h.lon,s.lat,s.lon)}))
     .filter(x=>x.d<=1.2).sort((a,b)=>a.d-b.d);
   const nearW=STATIONS.map(s=>({s:s, d:havKm(w.lat,w.lon,s.lat,s.lon)}))

@@ -45,6 +45,8 @@ body{margin:0; background:var(--bg); color:var(--text);
 .wx-adesc{color:var(--muted); margin-top:4px; white-space:pre-wrap; line-height:1.4;}
 .wx-strip b{font-weight:700;}
 .leave-line{font-size:16px; font-weight:600; margin:10px 0 4px; font-variant-numeric:tabular-nums;}
+.mini-btn{background:#007AFF; color:#fff; border:none; border-radius:12px; padding:4px 12px; font-size:13px; font-weight:600; margin-left:8px; cursor:pointer;}
+.mini-btn:active{opacity:0.7;}
 
 /* iOS segmented control */
 .seg{display:flex; background:var(--seg); border-radius:12px; padding:2px; margin-bottom:12px;}
@@ -1114,10 +1116,52 @@ function renderLegs(legResults, box){
     box.appendChild(n);
   }
 }
-function renderRoute(legResults, walkMin, arrWalkMin){
+function lockTrip(legResults, walkMin, arrWalkMin){
+  // Freeze the current plan so refreshes don't shift trains while moving
+  lockedPlan={
+    legResults:JSON.parse(JSON.stringify(legResults)),
+    walkMin:walkMin, arrWalkMin:arrWalkMin,
+    departedAt:Date.now(), direction:S.direction
+  };
+  try{ localStorage.setItem("standclear_lock", JSON.stringify(lockedPlan)); }catch(e){}
+  renderRoute(lockedPlan.legResults, walkMin, arrWalkMin, true);
+}
+function unlockTripSilent(){
+  lockedPlan=null;
+  try{ localStorage.removeItem("standclear_lock"); }catch(e){}
+}
+function unlockTrip(){
+  lockedPlan=null;
+  try{ localStorage.removeItem("standclear_lock"); }catch(e){}
+  loadAll();
+}
+function restoreLock(){
+  // Restore a lock from a previous session if still fresh (<3h)
+  try{
+    const raw=localStorage.getItem("standclear_lock");
+    if(!raw) return;
+    const lp=JSON.parse(raw);
+    if(Date.now()-lp.departedAt<3*3600*1000 && lp.direction===S.direction){
+      lockedPlan=lp;
+    }else{
+      localStorage.removeItem("standclear_lock");
+    }
+  }catch(e){}
+}
+function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
   const box=$("legs");
   box.innerHTML="";
-  if(walkMin!=null){
+  const walkEmoji=S.direction==="commute"?"\uD83D\uDEB6":"\uD83D\uDD7A";
+  if(isLocked&&lockedPlan){
+    // Frozen trip: show departed state with unlock option
+    const lv=document.createElement("div");
+    lv.className="leave-line";
+    lv.innerHTML=walkEmoji+" Departed <b>"+fmtClock(lockedPlan.departedAt/1000)+"</b> "
+      +'<button id="unlock-btn" class="mini-btn">Unlock</button>';
+    box.appendChild(lv);
+    const ub=lv.querySelector("#unlock-btn");
+    if(ub) ub.onclick=(e)=>{ e.stopPropagation(); unlockTrip(); };
+  }else if(walkMin!=null){
     const mins=Math.round(walkMin);
     const line=legResults[0].leg.line;
     const allTrips=legResults[0].trips||(legResults[0].trip?[legResults[0].trip]:[]);
@@ -1130,9 +1174,11 @@ function renderRoute(legResults, walkMin, arrWalkMin){
       const leaveBy=target.bt-mins*60;
       const lv=document.createElement("div");
       lv.className="leave-line";
-      const walkEmoji=S.direction==="commute"?"\uD83D\uDEB6":"\uD83D\uDD7A";
-      lv.innerHTML=walkEmoji+" Leave by <b>"+fmtClock(leaveBy)+"</b>";
+      lv.innerHTML=walkEmoji+" Leave by <b>"+fmtClock(leaveBy)+"</b> "
+        +'<button id="depart-btn" class="mini-btn">Depart →</button>';
       box.appendChild(lv);
+      const db=lv.querySelector("#depart-btn");
+      if(db) db.onclick=(e)=>{ e.stopPropagation(); lockTrip(legResults, walkMin, arrWalkMin); };
     }
   }
   renderLegs(legResults, box);
@@ -1192,6 +1238,7 @@ function renderAlts(options, legResults){
 
 /* ===== alternative detail (tap an alternative for full timing) ===== */
 let viewingAlt=null; // {stationId, lines, line}
+let lockedPlan=null; // frozen trip after user taps Depart {legResults, walkMin, arrWalkMin, departedAt, direction}
 function destStation(){ const l=getLegs(); return l.length?l[l.length-1].to:null; }
 
 async function nextDepartures(feed, line, stationId, after, n){
@@ -1335,6 +1382,10 @@ async function loadAll(){
       if(!legs.length){
         $("legs").innerHTML='<div class="leg-sub">'+esc(t("no_route"))+'</div>';
         renderAlts([], []);
+      }else if(lockedPlan&&lockedPlan.direction===S.direction){
+        // Locked trip: don't recompute, just re-render the frozen plan
+        renderRoute(lockedPlan.legResults, lockedPlan.walkMin, lockedPlan.arrWalkMin, true);
+        renderAlts([], lockedPlan.legResults);
       }else{
         let legResults=await computeRoute(legs);
         let walkMin=S.direction==="commute"?S.walkCommute:S.walkHomebound;
@@ -1588,11 +1639,13 @@ $("refresh-btn").onclick=()=>{ loadAll(); };
 }
 
 /* ===== init ===== */
+restoreLock();
 setInterval(()=>{ if(!document.hidden) loadAll(); }, 30000);
 document.querySelectorAll("#dir-toggle .seg-btn").forEach(b=>{
   b.onclick=()=>{
     if(S.direction!==b.dataset.dir){
       S.direction=b.dataset.dir;
+      unlockTripSilent();
       saveSettings();
       loadAll();
     }

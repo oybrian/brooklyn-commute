@@ -96,7 +96,7 @@ button{font:inherit;}
 #sheet{position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; z-index:50;
   align-items:flex-end; justify-content:center;}
 #sheet.open{display:flex;}
-#sheet-card{background:var(--bg); width:100%; max-width:520px; max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
+#sheet-card{background:var(--bg); width:100%; max-width:520px; max-height:92vh; max-height:92dvh; overflow-y:auto; -webkit-overflow-scrolling:touch;
   border-radius:20px 20px 0 0; padding:18px 18px 34px;}
 #sheet-card h2{margin:0 0 4px; font-size:22px; font-weight:700; letter-spacing:-.02em;}
 .f-label{font-size:13px; color:var(--muted); margin:16px 0 6px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;}
@@ -193,6 +193,7 @@ button{font:inherit;}
     <button class="btn block" id="add-leg" type="button">+ Add leg</button>
     <button class="btn primary block" id="set-save">Save</button>
     <div class="small" style="margin-top:8px" id="lbl-note">Addresses are geocoded once and stored on this device only.</div>
+    <div class="small" style="margin-top:4px; opacity:.5">v20261012f</div>
   </div>
 </div>
 

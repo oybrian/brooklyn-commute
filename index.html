@@ -38,6 +38,13 @@ body{margin:0; background:var(--bg); color:var(--text);
 .tier-wxstrip{padding:10px 16px;}
 .wx-strip{font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums;}
 .wx-strip .wx-icon{font-size:18px; margin-right:6px;}
+.wx-strip{cursor:pointer;}
+.wx-abadge{color:#B7791F; font-weight:600;}
+.chev-wx{color:#8E8E93; font-size:16px;}
+.wx-detail{font-size:13px; margin-top:6px;}
+.wx-alert{margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08);}
+.wx-ahead{margin-top:2px;}
+.wx-adesc{color:var(--muted); margin-top:4px; white-space:pre-wrap; line-height:1.4;}
 .wx-strip b{font-weight:700;}
 .leave-line{font-size:16px; font-weight:600; margin:10px 0 4px; font-variant-numeric:tabular-nums;}
 
@@ -225,7 +232,7 @@ const DEFAULTS = {
 };
 
 /* ===== i18n ===== */
-const LANGS=[["en","English"],["ko","한국어"],["zh","中文"],["ja","日本語"],["es","Español"],["fr","Français"]];
+const LANGS=[["en","English"],["ko","한국어"]];
 function t(key, vars){
   const lang=(typeof S!=="undefined"&&S.lang)||"en";
   let s=(I18N[lang]&&I18N[lang][key])||I18N.en[key]||key;
@@ -463,6 +470,7 @@ function loadSettings(){
           ].filter(l=>l.from&&l.to&&l.line);
         }else d.legs=[];
       }
+      if(!LANGS.some(function(c){return c[0]===d.lang;})) d.lang="en";
       return d;
     }
   }catch(e){}
@@ -546,6 +554,15 @@ async function fetchWeather(lat,lon){
     "&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=1";
   const r=await fetch(u);
   return await r.json();
+}
+async function fetchNwsAlerts(lat,lon){
+  const u="https://api.weather.gov/alerts/active?point="+lat+","+lon+"&status=actual&message_type=alert,update";
+  const r=await fetch(u,{headers:{Accept:"application/geo+json"}});
+  const j=await r.json();
+  return (j.features||[]).map(f=>{
+    const p=f.properties||{};
+    return {event:p.event||"Alert",headline:p.headline||"",desc:p.description||""};
+  });
 }
 
 /* ===== MTA service status (alerts JSON) ===== */
@@ -819,15 +836,40 @@ async function findFastRoutes(legResults){
 
 /* ===== render ===== */
 function dotCls(cls){ return cls==="green"?"green":cls; }
-function renderWeather(w){
+const wxState={open:false};
+function renderWeather(w, alerts){
+  alerts=alerts||[];
   try{
     const cur=w.current, daily=w.daily, code=cur.weather_code;
+    const strip=$("wx-strip");
+    let h='<span class="wx-icon">'+(WMO_ICON[code]||"")+'</span>'+
+      '<b>'+tempBoth(cur.temperature_2m)+'</b> '+esc(wmoText(code));
+    if(alerts.length){
+      h+=' <span class="wx-abadge">⚠️ '+esc(alerts[0].event)+(alerts.length>1?" +"+(alerts.length-1):"")+'</span>';
+    }
+    h+=' <span class="chev-wx">'+(wxState.open?"⌄":"›")+'</span>';
+    strip.innerHTML=h;
+    strip.style.cursor="pointer";
+    let d=$("wx-detail");
+    if(!d){
+      d=document.createElement("div");
+      d.id="wx-detail";
+      d.className="wx-detail";
+      strip.parentNode.appendChild(d);
+    }
     const hi=Math.round(daily.temperature_2m_max[0])+"°", lo=Math.round(daily.temperature_2m_min[0])+"°";
     const wind=cur.wind_speed_10m!=null?Math.round(cur.wind_speed_10m)+" mph":"—";
     const rain=daily.precipitation_probability_max&&daily.precipitation_probability_max[0]!=null?daily.precipitation_probability_max[0]+"%":"—";
-    $("wx-strip").innerHTML='<span class="wx-icon">'+(WMO_ICON[code]||"")+'</span>'+
-      '<b>'+tempBoth(cur.temperature_2m)+'</b> '+esc(wmoText(code))+
-      ' <span style="color:var(--muted)">· H '+hi+' L '+lo+' · 💨 '+wind+' · 🌧️ '+rain+'</span>';
+    let dh='<span style="color:var(--muted)">H '+hi+' L '+lo+' · 💨 '+wind+' · 🌧️ '+rain+'</span>';
+    for(const al of alerts){
+      dh+='<div class="wx-alert"><b>⚠️ '+esc(al.event)+'</b>'
+        +(al.headline?'<div class="wx-ahead">'+esc(al.headline)+'</div>':"")
+        +(al.desc?'<div class="wx-adesc">'+esc(al.desc.slice(0,400))+'</div>':"")
+        +'</div>';
+    }
+    d.innerHTML=dh;
+    d.style.display=wxState.open?"block":"none";
+    strip.onclick=()=>{ wxState.open=!wxState.open; renderWeather(w, alerts); };
   }catch(e){
     $("wx-strip").textContent="—";
   }
@@ -1178,7 +1220,8 @@ async function loadAll(){
     await fetchStatus().catch(()=>{});
     renderPlanned();
     const wx=await fetchWeather(o.lat,o.lon).catch(()=>null);
-    if(wx) renderWeather(wx);
+    const nws=(o.lat!=null&&o.lon!=null)?await fetchNwsAlerts(o.lat,o.lon).catch(()=>[]):[];
+    if(wx) renderWeather(wx, nws);
     if(viewingAlt){
       await renderAltDetail(viewingAlt);
     }else{

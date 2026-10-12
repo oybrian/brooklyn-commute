@@ -1447,7 +1447,7 @@ function initSettings(){
     saveSettings(); renderLegEditors();
   };
   $("sheet-close").onclick=()=>{ $("sheet").classList.remove("open"); loadAll(); };
-  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); const c=$("sheet-card"); if(c){ c.scrollTop=0; requestAnimationFrame(()=>{ c.scrollTop=0; }); } };
+  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); const c=$("sheet-card"); if(c){ void c.offsetHeight; c.scrollTop=0; } };
   $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")){ $("sheet").classList.remove("open"); loadAll(); } });
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();

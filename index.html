@@ -942,7 +942,7 @@ function makeTappable(cardEl, key, leg, trip){
     loadTtInto(ttEl, leg, trip.bt);
   }
 }
-function renderLegs(legResults, box, arrWalkMin){
+function renderLegs(legResults, box){
   legResults.forEach((r,i)=>{
     const leg=r.leg, st=statusOf(leg.line);
     if(i===0){
@@ -990,15 +990,12 @@ function renderLegs(legResults, box, arrWalkMin){
       const trip=r.trip;
       const fd=document.createElement("div");
       fd.className="leg";
-      let fh='<div class="leg-head">'+esc(t("arrive",{station:stationName(leg.to)}))+'</div>';
+      let fh;
       if(trip&&trip.at){
-        fh+='<div class="leg-time">'+t("est_arrival",{time:fmtClock(trip.at)})+'</div>';
-        if(arrWalkMin!=null){
-          const aIcon=S.direction==="commute"?"🏢":"🏠";
-          fh+='<div class="leg-time">'+aIcon+' <b>'+fmtClock(trip.at+arrWalkMin*60)+'</b></div>';
-        }
+        fh='<div class="leg-head">Arrive '+esc(stationName(leg.to))+' at '+fmtClock(trip.at)+'</div>';
       }else{
-        fh+='<div class="leg-sub">'+esc(t("arr_unavailable"))+'</div>';
+        fh='<div class="leg-head">'+esc(t("arrive",{station:stationName(leg.to)}))+'</div>'
+          +'<div class="leg-sub">'+esc(t("arr_unavailable"))+'</div>';
       }
       fd.innerHTML=fh;
       box.appendChild(fd);
@@ -1027,11 +1024,19 @@ function renderRoute(legResults, walkMin, arrWalkMin){
       const leaveBy=target.bt-mins*60;
       const lv=document.createElement("div");
       lv.className="leave-line";
-      lv.innerHTML="🚶 "+t("leave_by",{time:fmtClock(leaveBy),line:esc(line),traintime:fmtClock(target.bt)});
+      lv.innerHTML="🚶 Leave by <b>"+fmtClock(leaveBy)+"</b>";
       box.appendChild(lv);
     }
   }
-  renderLegs(legResults, box, arrWalkMin);
+  renderLegs(legResults, box);
+  // final home/work arrival as its own line after the last card (like leave-by)
+  const lastTrip=legResults[legResults.length-1].trip;
+  if(lastTrip&&lastTrip.at&&arrWalkMin!=null){
+    const av=document.createElement("div");
+    av.className="leave-line";
+    av.innerHTML=(S.direction==="commute"?"🏢":"🏠")+" "+fmtClock(lastTrip.at+arrWalkMin*60);
+    box.appendChild(av);
+  }
 }
 function renderAlts(options, legResults){
   const box=$("alts");

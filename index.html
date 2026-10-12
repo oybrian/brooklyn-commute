@@ -1170,16 +1170,19 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
     for(const tr of allTrips){
       if(tr.bt-mins*60>=nowSec){ target=tr; break; }
     }
+    const lv=document.createElement("div");
+    lv.className="leave-line";
     if(target){
       const leaveBy=target.bt-mins*60;
-      const lv=document.createElement("div");
-      lv.className="leave-line";
       lv.innerHTML=walkEmoji+" Leave by <b>"+fmtClock(leaveBy)+"</b> "
         +'<button id="depart-btn" class="mini-btn">Depart →</button>';
-      box.appendChild(lv);
-      const db=lv.querySelector("#depart-btn");
-      if(db) db.onclick=(e)=>{ e.stopPropagation(); lockTrip(legResults, walkMin, arrWalkMin); };
+    }else{
+      // No catchable train right now, but still allow locking the displayed plan
+      lv.innerHTML=walkEmoji+' <button id="depart-btn" class="mini-btn">Depart →</button>';
     }
+    box.appendChild(lv);
+    const db=lv.querySelector("#depart-btn");
+    if(db) db.onclick=(e)=>{ e.stopPropagation(); lockTrip(legResults, walkMin, arrWalkMin); };
   }
   renderLegs(legResults, box);
   // final home/work arrival as its own line after the last card (like leave-by)

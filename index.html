@@ -39,6 +39,8 @@ body{margin:0; background:var(--bg); color:var(--text);
 .wx-strip{font-size:14px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums;}
 .wx-strip .wx-icon{font-size:18px; margin-right:6px;}
 .wx-strip b{font-weight:700;}
+.leave-line{font-size:16px; font-weight:600; margin:10px 0 4px; font-variant-numeric:tabular-nums;}
+
 /* iOS segmented control */
 .seg{display:flex; background:var(--seg); border-radius:12px; padding:2px; margin-bottom:12px;}
 .seg-btn{flex:1; border:none; background:transparent; border-radius:10px; padding:8px 0;
@@ -224,7 +226,7 @@ no_feed:"Live arrivals unavailable for the {line} line right now.",
 transfer_at:"Transfer at {station}",your_arrives:"Your {line} arrives at <b>{time}</b>.",
 transfer_wait:"transfer after a {n}-min wait",transfer_now:"transfer now",
 waiting_conn:"Waiting for the next {line} connection…",transfer_to:"Transfer to the {line} line here.",
-arrive:"Arrive {station}",arrive_at:"Arrive <b>{time}</b>",est_arrival:"Estimated arrival <b>{time}</b>",arr_unavailable:"Arrival time unavailable.",
+arrive:"Arrive {station}",arrive_at:"Arrive <b>{time}</b>",est_arrival:"Estimated arrival <b>{time}</b>",arr_unavailable:"Arrival time unavailable.",leave_by:"Leave by <b>{time}</b> for the {line} at {traintime}",leave_now:"<b>Leave now</b> — {line} is boarding!",
 station_notices:"Station notices:",
 no_faster:"Disruption detected, but no faster route found right now.",
 all_clear:"All clear on your route.",fastest_opts:"Disruption detected — fastest options:",
@@ -256,7 +258,7 @@ no_feed:"{line} 실시간 도착 정보를 가져올 수 없습니다.",
 transfer_at:"{station}에서 환승",your_arrives:"{line} <b>{time}</b> 도착.",
 transfer_wait:"{n}분 대기 후 환승",transfer_now:"바로 환승",
 waiting_conn:"다음 {line} 연결 대기 중…",transfer_to:"여기서 {line}(으)로 갈아타세요.",
-arrive:"{station} 도착",arrive_at:"<b>{time}</b> 도착",est_arrival:"도착 예정 {time}",arr_unavailable:"도착 시간을 알 수 없습니다.",
+arrive:"{station} 도착",arrive_at:"<b>{time}</b> 도착",est_arrival:"도착 예정 {time}",arr_unavailable:"도착 시간을 알 수 없습니다.",leave_by:"{traintime} {line} 타려면 <b>{time}</b>에 출발",leave_now:"<b>지금 출발</b> — {line} 탑승 중!",
 station_notices:"역 공지:",
 no_faster:"지연이 감지됐지만 더 빠른 경로가 없습니다.",
 all_clear:"경로에 이상 없습니다.",fastest_opts:"지연 감지 — 가장 빠른 경로:",
@@ -288,7 +290,7 @@ no_feed:"暂时无法获取 {line} 实时到站信息。",
 transfer_at:"在{station}换乘",your_arrives:"{line}将于 <b>{time}</b> 到达。",
 transfer_wait:"等待 {n} 分钟后换乘",transfer_now:"立即换乘",
 waiting_conn:"等待下一班 {line}…",transfer_to:"请在此换乘 {line}。",
-arrive:"到达{station}",arrive_at:"<b>{time}</b> 到达",est_arrival:"预计到达 <b>{time}</b>",arr_unavailable:"无法获取到达时间。",
+arrive:"到达{station}",arrive_at:"<b>{time}</b> 到达",est_arrival:"预计到达 <b>{time}</b>",arr_unavailable:"无法获取到达时间。",leave_by:"要在 <b>{time}</b> 出发赶 {traintime} 的 {line}",leave_now:"<b>现在出发</b> — {line} 正在上车！",
 station_notices:"车站通知：",
 no_faster:"检测到延误，但目前没有更快的路线。",
 all_clear:"你的路线一切正常。",fastest_opts:"检测到延误 — 最快的路线：",
@@ -320,7 +322,7 @@ no_feed:"{line}のリアルタイム到着情報を取得できません。",
 transfer_at:"{station}で乗換",your_arrives:"{line}は<b>{time}</b>に到着します。",
 transfer_wait:"{n}分待って乗換",transfer_now:"すぐ乗換",
 waiting_conn:"次の{line}を待っています…",transfer_to:"ここで{line}に乗り換えてください。",
-arrive:"{station}到着",arrive_at:"<b>{time}</b> 到着",est_arrival:"到着予定 <b>{time}</b>",arr_unavailable:"到着時刻を取得できません。",
+arrive:"{station}到着",arrive_at:"<b>{time}</b> 到着",est_arrival:"到着予定 <b>{time}</b>",arr_unavailable:"到着時刻を取得できません。",leave_by:"{traintime}の{line}に乗るには<b>{time}</b>に出発",leave_now:"<b>今出発</b> — {line}乗車中！",
 station_notices:"駅のお知らせ:",
 no_faster:"遅延を検出しましたが、より速いルートがありません。",
 all_clear:"ルートに問題ありません。",fastest_opts:"遅延検出 — 最速ルート:",
@@ -352,7 +354,7 @@ no_feed:"Llegadas en vivo no disponibles para la línea {line}.",
 transfer_at:"Transbordo en {station}",your_arrives:"Tu {line} llega a las <b>{time}</b>.",
 transfer_wait:"transbordo tras {n} min de espera",transfer_now:"transbordo ahora",
 waiting_conn:"Esperando la próxima conexión {line}…",transfer_to:"Transborda a la línea {line} aquí.",
-arrive:"Llegada a {station}",arrive_at:"Llegada <b>{time}</b>",est_arrival:"Llegada estimada <b>{time}</b>",arr_unavailable:"Hora de llegada no disponible.",
+arrive:"Llegada a {station}",arrive_at:"Llegada <b>{time}</b>",est_arrival:"Llegada estimada <b>{time}</b>",arr_unavailable:"Hora de llegada no disponible.",leave_by:"Sal a las <b>{time}</b> para el {line} de las {traintime}",leave_now:"<b>¡Sal ahora</b> — {line} abordando!",
 station_notices:"Avisos de estación:",
 no_faster:"Retraso detectado, pero no hay ruta más rápida ahora.",
 all_clear:"Todo despejado en tu ruta.",fastest_opts:"Retraso detectado — opciones más rápidas:",
@@ -384,7 +386,7 @@ no_feed:"Arrivées en direct indisponibles pour la ligne {line}.",
 transfer_at:"Correspondance à {station}",your_arrives:"Votre {line} arrive à <b>{time}</b>.",
 transfer_wait:"correspondance après {n} min d'attente",transfer_now:"correspondance immédiate",
 waiting_conn:"En attente de la prochaine correspondance {line}…",transfer_to:"Changez pour la ligne {line} ici.",
-arrive:"Arrivée à {station}",arrive_at:"Arrivée <b>{time}</b>",est_arrival:"Arrivée estimée <b>{time}</b>",arr_unavailable:"Heure d'arrivée indisponible.",
+arrive:"Arrivée à {station}",arrive_at:"Arrivée <b>{time}</b>",est_arrival:"Arrivée estimée <b>{time}</b>",arr_unavailable:"Heure d'arrivée indisponible.",leave_by:"Partez à <b>{time}</b> pour le {line} de {traintime}",leave_now:"<b>Partez maintenant</b> — embarquement {line} !",
 station_notices:"Infos stations :",
 no_faster:"Perturbation détectée, mais aucun itinéraire plus rapide.",
 all_clear:"Rien à signaler sur votre trajet.",fastest_opts:"Perturbation — itinéraires les plus rapides :",
@@ -840,13 +842,29 @@ function renderLegs(legResults, box){
 function renderRoute(legResults, walkMin){
   const box=$("legs");
   box.innerHTML="";
-  const o=originInfo();
   const firstSt=stationName(legResults[0].leg.from);
   const w=document.createElement("div");
   w.className="leg-sub";
   w.style.margin="8px 0";
-  w.textContent = walkMin==null ? t("add_addr",{place:t(S.direction==="commute"?"home":"work")})
-    : t("walk_to",{min:Math.round(walkMin),place:t(S.direction==="commute"?"home":"work"),station:esc(firstSt)});
+  if(walkMin==null){
+    w.textContent=t("add_addr",{place:t(S.direction==="commute"?"home":"work")});
+  }else{
+    const mins=Math.round(walkMin);
+    w.textContent=t("walk_to",{min:mins,place:t(S.direction==="commute"?"home":"work"),station:firstSt});
+    const trip=legResults[0].trip, line=legResults[0].leg.line;
+    if(trip&&trip.bt){
+      const leaveBy=trip.bt-mins*60, nowSec=Date.now()/1000;
+      const lv=document.createElement("div");
+      lv.className="leave-line";
+      lv.innerHTML="🚶 "+(leaveBy>nowSec
+        ? t("leave_by",{time:fmtClock(leaveBy),line:esc(line),traintime:fmtClock(trip.bt)})
+        : t("leave_now",{line:esc(line)}));
+      box.appendChild(w);
+      box.appendChild(lv);
+      renderLegs(legResults, box);
+      return;
+    }
+  }
   box.appendChild(w);
   renderLegs(legResults, box);
 }

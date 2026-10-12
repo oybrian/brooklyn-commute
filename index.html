@@ -168,8 +168,6 @@ button{font:inherit;}
       <h2 id="set-title">Commute settings</h2>
       <button class="btn" id="sheet-close">Done</button>
     </div>
-    <div class="f-label" id="lbl-lang">Language</div>
-    <div class="linechips" id="lang-chips"></div>
     <div class="f-label" id="lbl-home">Home address</div>
     <div class="pick-wrap">
       <input class="f-input" id="set-home" placeholder="e.g. 123 Main St, Brooklyn NY 11238" autocomplete="off">
@@ -232,7 +230,6 @@ const DEFAULTS = {
 };
 
 /* ===== i18n ===== */
-const LANGS=[["en","English"],["ko","한국어"]];
 function t(key, vars){
   const lang=(typeof S!=="undefined"&&S.lang)||"en";
   let s=(I18N[lang]&&I18N[lang][key])||I18N.en[key]||key;
@@ -470,7 +467,7 @@ function loadSettings(){
           ].filter(l=>l.from&&l.to&&l.line);
         }else d.legs=[];
       }
-      if(!LANGS.some(function(c){return c[0]===d.lang;})) d.lang="en";
+      d.lang="en";
       return d;
     }
   }catch(e){}
@@ -1380,7 +1377,6 @@ function applyI18n(){
   });
   $("set-title").textContent=t("settings_title");
   $("sheet-close").textContent=t("done");
-  $("lbl-lang").textContent=t("language");
   $("lbl-home").textContent=t("home_address");
   $("lbl-work").textContent=t("work_address");
   $("lbl-walk").textContent=t("walk_time");
@@ -1396,21 +1392,7 @@ function applyI18n(){
   $("add-leg").textContent=t("add_leg");
   $("set-save").textContent=t("save");
   $("lbl-note").textContent=t("addr_note");
-  renderLangChips();
   renderLegEditors();
-}
-function renderLangChips(){
-  const wrap=$("lang-chips");
-  if(!wrap) return;
-  wrap.innerHTML="";
-  LANGS.forEach(([code,name])=>{
-    const b=document.createElement("button");
-    b.type="button";
-    b.className="chip"+((S.lang||"en")===code?" sel":"");
-    b.textContent=name;
-    b.onclick=()=>{ S.lang=code; saveSettings(); applyI18n(); loadAll(); };
-    wrap.appendChild(b);
-  });
 }
 function initSettings(){
   $("set-home").value=S.home.label||"";
@@ -1429,7 +1411,7 @@ function initSettings(){
     saveSettings(); renderLegEditors();
   };
   $("sheet-close").onclick=()=>$("sheet").classList.remove("open");
-  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); renderLangChips(); };
+  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); };
   $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").classList.remove("open"); });
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();

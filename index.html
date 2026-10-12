@@ -116,9 +116,9 @@ button{font:inherit;}
       <button class="btn" id="sheet-close">Done</button>
     </div>
     <div class="f-label">Home address</div>
-    <input class="f-input" id="set-home" placeholder="e.g. 595 Dean St, Brooklyn NY 11238">
+    <input class="f-input" id="set-home" placeholder="e.g. 123 Main St, Brooklyn NY 11238">
     <div class="f-label">Work address</div>
-    <input class="f-input" id="set-work" placeholder="e.g. 7 Bushwick Pl, Brooklyn NY 11206">
+    <input class="f-input" id="set-work" placeholder="e.g. 456 Broadway, Brooklyn NY 11206">
     <div class="f-label">Boarding station</div>
     <div class="picker" id="pk1"></div>
     <div class="f-label">Transfer: get off</div>
@@ -239,6 +239,7 @@ async function geocode(label){
 
 /* ===== walk time (OSRM foot, haversine fallback) ===== */
 async function walkMinutes(aLat,aLon,bLat,bLon){
+  if(aLat==null||aLon==null||bLat==null||bLon==null) return null;
   try{
     const u="https://router.project-osrm.org/route/v1/foot/"+aLon+","+aLat+";"+bLon+","+bLat+"?overview=false";
     const r=await fetch(u);
@@ -499,7 +500,7 @@ function renderRoute(legResults, walkMin){
   const w=document.createElement("div");
   w.className="leg-sub";
   w.style.margin="8px 0";
-  w.textContent = walkMin==null ? "Walk to "+firstSt+": —"
+  w.textContent = walkMin==null ? "Add your "+(S.direction==="commute"?"home":"work")+" address in Settings for walk time."
     : "Walk ~"+Math.round(walkMin)+" min from "+(S.direction==="commute"?"home":"work")+" to "+firstSt;
   box.appendChild(w);
   renderLegs(legResults, box);
@@ -582,6 +583,7 @@ async function renderAltDetail(alt){
   w.className="leg-sub";
   w.style.margin="8px 0";
   if(walkMin!=null) w.textContent="Walk ~"+Math.round(walkMin)+" min from "+(S.direction==="commute"?"home":"work")+" to "+st.name;
+  else w.textContent="Add your "+(S.direction==="commute"?"home":"work")+" address in Settings for walk time.";
   box.appendChild(w);
 
   const line=alt.line||alt.lines[0];

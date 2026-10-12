@@ -574,39 +574,42 @@ function renderWeather(w){
 function renderLegs(legResults, box){
   legResults.forEach((r,i)=>{
     const leg=r.leg, st=statusOf(leg.line);
-    const d=document.createElement("div");
-    d.className="leg";
-    let html='<div class="leg-head">'+lineBadge(leg.line)+'<span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span></div>';
-    html+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(SEV_LABEL[st.cls]||"Good service")+'</div>';
-    if(r.trip){
-      html+='<div class="leg-time">in <b>'+countdown(r.trip.bt)+'</b> <span class="leg-sub">('+fmtClock(r.trip.bt)+')</span></div>';
-    }else if(!r.feedOk){
-      html+='<div class="leg-sub">Live arrivals unavailable for the '+esc(leg.line)+' line right now.</div>';
+    if(i===0){
+      // first leg: full card with boarding countdown
+      const d=document.createElement("div");
+      d.className="leg";
+      let html='<div class="leg-head">'+lineBadge(leg.line)+'<span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span></div>';
+      html+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(SEV_LABEL[st.cls]||"Good service")+'</div>';
+      if(r.trip){
+        html+='<div class="leg-time">in <b>'+countdown(r.trip.bt)+'</b> <span class="leg-sub">('+fmtClock(r.trip.bt)+')</span></div>';
+      }else if(!r.feedOk){
+        html+='<div class="leg-sub">Live arrivals unavailable for the '+esc(leg.line)+' line right now.</div>';
+      }else{
+        html+='<div class="leg-sub">No upcoming '+esc(leg.line)+' trains found for this direction.</div>';
+      }
+      if(st.text) html+='<div class="alert-text">'+esc(st.text)+'</div>';
+      d.innerHTML=html;
+      box.appendChild(d);
     }else{
-      html+='<div class="leg-sub">No upcoming '+esc(leg.line)+' trains found for this direction.</div>';
-    }
-    if(st.text) html+='<div class="alert-text">'+esc(st.text)+'</div>';
-    d.innerHTML=html;
-    box.appendChild(d);
-
-    // transfer card between legs
-    if(i<legResults.length-1){
-      const t1=r.trip, t2=legResults[i+1].trip;
-      const l2=legResults[i+1].leg;
+      // later legs: folded into the transfer card (no duplicate leg card)
+      const prev=legResults[i-1];
+      const t1=prev.trip, t2=r.trip;
       const td=document.createElement("div");
       td.className="leg transfer";
-      let th='<div class="leg-head">'+lineBadge(l2.line)+'<span>Transfer at '+esc(stationName(leg.to))+'</span></div>';
+      let th='<div class="leg-head">'+lineBadge(leg.line)+'<span>Transfer at '+esc(stationName(prev.leg.to))+'</span></div>';
+      th+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(SEV_LABEL[st.cls]||"Good service")+'</div>';
       if(t1&&t1.at){
-        th+='<div class="leg-time">Your '+esc(leg.line)+' arrives at <b>'+fmtClock(t1.at)+'</b>.</div>';
+        th+='<div class="leg-time">Your '+esc(prev.leg.line)+' arrives at <b>'+fmtClock(t1.at)+'</b>.</div>';
         if(t2){
           const wait=Math.max(0,Math.round((t2.bt-t1.at)/60));
           th+='<div class="leg-time">in <b>'+countdown(t2.bt)+'</b> <span class="leg-sub">('+fmtClock(t2.bt)+')</span> &mdash; transfer'+(wait>0?' after a '+wait+'-min wait':' now')+'.</div>';
         }else{
-          th+='<div class="leg-sub">Waiting for the next '+esc(l2.line)+' connection&hellip;</div>';
+          th+='<div class="leg-sub">Waiting for the next '+esc(leg.line)+' connection&hellip;</div>';
         }
       }else{
-        th+='<div class="leg-sub">Transfer to the '+esc(l2.line)+' line here.</div>';
+        th+='<div class="leg-sub">Transfer to the '+esc(leg.line)+' line here.</div>';
       }
+      if(st.text) th+='<div class="alert-text">'+esc(st.text)+'</div>';
       td.innerHTML=th;
       box.appendChild(td);
     }

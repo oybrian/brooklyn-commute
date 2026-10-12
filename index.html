@@ -135,6 +135,7 @@ button{font:inherit;}
 <div id="app">
   <div class="topbar">
     <div class="app-title">StandClear</div>
+    <button class="icon-btn" id="refresh-btn" aria-label="Refresh">&#10227;</button>
     <button class="icon-btn" id="settings-btn" aria-label="Settings">&#9776;</button>
   </div>
   <div id="err" class="err" style="display:none"></div>
@@ -1555,6 +1556,7 @@ function initSettings(){
   };
   $("sheet-close").onclick=()=>{ $("sheet").classList.remove("open"); };
   $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); };
+$("refresh-btn").onclick=()=>{ loadAll(); };
   $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").classList.remove("open"); });
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();

@@ -122,7 +122,7 @@ button{font:inherit;}
   <div id="err" class="err" style="display:none"></div>
 
   <section class="tier" id="tier-weather">
-    <h2>Weather &middot; Brooklyn</h2>
+    <h2 id="h-weather">Weather &middot; Brooklyn</h2>
     <div class="row">
       <div>
         <div class="wx-temp" id="wx-temp">&ndash;</div>
@@ -137,13 +137,13 @@ button{font:inherit;}
   </section>
 
   <section class="tier" id="tier-route">
-    <h2>Your route</h2>
+    <h2 id="h-route">Your route</h2>
     <div class="seg" id="dir-toggle"><button class="seg-btn sel" data-dir="commute">To Work</button><button class="seg-btn" data-dir="homebound">To Home</button></div>
     <div id="legs" style="margin-top:4px"></div>
   </section>
 
   <section class="tier" id="tier-alt">
-    <h2>Alternatives</h2>
+    <h2 id="h-alt">Alternatives</h2>
     <div id="alts"></div>
   </section>
 
@@ -153,24 +153,26 @@ button{font:inherit;}
 <div id="sheet">
   <div id="sheet-card">
     <div class="row">
-      <h2>Commute settings</h2>
+      <h2 id="set-title">Commute settings</h2>
       <button class="btn" id="sheet-close">Done</button>
     </div>
-    <div class="f-label">Home address</div>
+    <div class="f-label" id="lbl-lang">Language</div>
+    <div class="linechips" id="lang-chips"></div>
+    <div class="f-label" id="lbl-home">Home address</div>
     <div class="pick-wrap">
       <input class="f-input" id="set-home" placeholder="e.g. 123 Main St, Brooklyn NY 11238" autocomplete="off">
       <div class="pick-list" id="home-ac"></div>
     </div>
-    <div class="f-label">Work address</div>
+    <div class="f-label" id="lbl-work">Work address</div>
     <div class="pick-wrap">
       <input class="f-input" id="set-work" placeholder="e.g. 456 Broadway, Brooklyn NY 11206" autocomplete="off">
       <div class="pick-list" id="work-ac"></div>
     </div>
-    <div class="f-label">Route legs <span class="f-hint">One per train — no transfer? Just use one leg.</span></div>
+    <div class="f-label"><span id="lbl-legs">Route legs</span> <span class="f-hint" id="lbl-legs-hint">One per train — no transfer? Just use one leg.</span></div>
     <div id="leg-list"></div>
     <button class="btn block" id="add-leg" type="button">+ Add leg</button>
     <button class="btn primary block" id="set-save">Save</button>
-    <div class="small" style="margin-top:8px">Addresses are geocoded once and stored on this device only.</div>
+    <div class="small" style="margin-top:8px" id="lbl-note">Addresses are geocoded once and stored on this device only.</div>
   </div>
 </div>
 
@@ -198,7 +200,228 @@ const DEFAULTS = {
     {line:"G", from:"G35", to:"G29"},
     {line:"L", from:"L10", to:"L13"}
   ],
-  direction:"commute"
+  direction:"commute",
+  lang:"en"
+};
+
+/* ===== i18n ===== */
+const LANGS=[["en","English"],["ko","한국어"],["zh","中文"],["ja","日本語"],["es","Español"],["fr","Français"]];
+function t(key, vars){
+  const lang=(typeof S!=="undefined"&&S.lang)||"en";
+  let s=(I18N[lang]&&I18N[lang][key])||I18N.en[key]||key;
+  if(vars) for(const k in vars) s=String(s).split("{"+k+"}").join(vars[k]);
+  return s;
+}
+function wmoText(code){
+  const lang=(typeof S!=="undefined"&&S.lang)||"en";
+  return (WMO_L[lang]&&WMO_L[lang][code])||WMO[code]||"";
+}
+const I18N={
+en:{
+settings_title:"Commute settings",done:"Done",language:"Language",
+home_address:"Home address",work_address:"Work address",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
+route_legs:"Route legs",legs_hint:"One per train — no transfer? Just use one leg.",
+leg_n:"Leg {n}",board:"Board",get_off:"Get off",remove:"× Remove",add_leg:"+ Add leg",
+save:"Save",saving:"Saving…",addr_note:"Addresses are geocoded once and stored on this device only.",
+max_legs:"Maximum 4 legs.",station_ph:"Type station name…",
+to_work:"To Work",to_home:"To Home",your_route:"Your route",weather_bk:"Weather · Brooklyn",alternatives:"Alternatives",
+wind:"Wind",rain:"Rain",home:"home",work:"work",
+walk_to:"Walk ~{min} min from {place} to {station}",
+add_addr:"Add your {place} address in Settings for walk time.",
+no_route:"No route set. Tap the gear icon, add at least one leg (board → get off), then Save.",
+sev_suspended:"Suspended",sev_delays:"Delays",sev_planned:"Planned work",sev_good:"Good service",
+cd_min:"in <b>{n} min</b>",cd_now:"<b>Boarding now</b>",nx_min:"Next {line} in <b>{n} min</b>",nx_now:"<b>{line} boarding now</b>",
+no_trains:"No upcoming {line} trains found for this direction.",
+no_feed:"Live arrivals unavailable for the {line} line right now.",
+transfer_at:"Transfer at {station}",your_arrives:"Your {line} arrives at <b>{time}</b>.",
+transfer_wait:"transfer after a {n}-min wait",transfer_now:"transfer now",
+waiting_conn:"Waiting for the next {line} connection…",transfer_to:"Transfer to the {line} line here.",
+arrive:"Arrive {station}",arrive_at:"Arrive <b>{time}</b>",est_arrival:"Estimated arrival <b>{time}</b>",arr_unavailable:"Arrival time unavailable.",
+station_notices:"Station notices:",
+no_faster:"Disruption detected, but no faster route found right now.",
+all_clear:"All clear on your route.",fastest_opts:"Disruption detected — fastest options:",
+alt_sub:"{total} min total · walk {walk} min to {station}",via:"via {station}",
+faster:"{n} min faster than your route",slower:"{n} min slower than your route",
+tap_timing:"Tap for full timing.",alt_route:"Alternative route",
+opt_gone:"This option is no longer available right now.",back_route:"← Back to my route",
+showing_alt:"Showing alternative detail. Tap “← Back to my route” to return.",
+updated:"Updated {time} ET",
+err_load:"Couldn't load live data. Check your connection and tap Refresh.",
+err_save:"Couldn't save settings: "
+},
+ko:{
+settings_title:"출퇴근 설정",done:"완료",language:"언어",
+home_address:"집 주소",work_address:"직장 주소",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
+route_legs:"경로 구간",legs_hint:"타는 열차마다 하나씩 — 환승 없으면 1개만.",
+leg_n:"구간 {n}",board:"탑승",get_off:"하차",remove:"× 삭제",add_leg:"+ 구간 추가",
+save:"저장",saving:"저장 중…",addr_note:"주소는 한 번만 변환되어 이 기기에만 저장됩니다.",
+max_legs:"최대 4개 구간.",station_ph:"역 이름 입력…",
+to_work:"출근",to_home:"퇴근",your_route:"내 경로",weather_bk:"날씨 · 브루클린",alternatives:"대체 경로",
+wind:"바람",rain:"강수",home:"집",work:"직장",
+walk_to:"{place}에서 {station}까지 도보 약 {min}분",
+add_addr:"도보 시간을 보려면 설정에서 {place} 주소를 입력하세요.",
+no_route:"경로가 없습니다. ⚙️를 눌러 구간을 추가한 뒤 저장하세요.",
+sev_suspended:"운행 중단",sev_delays:"지연",sev_planned:"계획 공사",sev_good:"정상 운행",
+cd_min:"<b>{n}분 후</b>",cd_now:"<b>지금 탑승</b>",nx_min:"다음 {line} <b>{n}분 후</b>",nx_now:"<b>{line} 지금 탑승</b>",
+no_trains:"이 방향 {line} 열차가 없습니다.",
+no_feed:"{line} 실시간 도착 정보를 가져올 수 없습니다.",
+transfer_at:"{station}에서 환승",your_arrives:"{line} <b>{time}</b> 도착.",
+transfer_wait:"{n}분 대기 후 환승",transfer_now:"바로 환승",
+waiting_conn:"다음 {line} 연결 대기 중…",transfer_to:"여기서 {line}(으)로 갈아타세요.",
+arrive:"{station} 도착",arrive_at:"<b>{time}</b> 도착",est_arrival:"도착 예정 {time}",arr_unavailable:"도착 시간을 알 수 없습니다.",
+station_notices:"역 공지:",
+no_faster:"지연이 감지됐지만 더 빠른 경로가 없습니다.",
+all_clear:"경로에 이상 없습니다.",fastest_opts:"지연 감지 — 가장 빠른 경로:",
+alt_sub:"총 {total}분 · {station}까지 도보 {walk}분",via:"경유 {station}",
+faster:"내 경로보다 {n}분 빠름",slower:"내 경로보다 {n}분 느림",
+tap_timing:"탭하면 전체 시간표.",alt_route:"대체 경로",
+opt_gone:"이 경로는 지금 이용할 수 없습니다.",back_route:"← 내 경로로 돌아가기",
+showing_alt:"대체 경로 상세 보기 중. “← 내 경로로 돌아가기”를 눌러 돌아가세요.",
+updated:"{time} ET 업데이트",
+err_load:"실시간 데이터를 불러오지 못했습니다. 연결을 확인하고 새로고침을 눌러주세요.",
+err_save:"설정을 저장하지 못했습니다: "
+},
+zh:{
+settings_title:"通勤设置",done:"完成",language:"语言",
+home_address:"家庭地址",work_address:"工作地址",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
+route_legs:"路线段",legs_hint:"每乘一趟车一段 — 不换乘？只用一段。",
+leg_n:"第 {n} 段",board:"上车",get_off:"下车",remove:"× 删除",add_leg:"+ 添加路段",
+save:"保存",saving:"保存中…",addr_note:"地址仅转换一次，只保存在此设备上。",
+max_legs:"最多 4 段。",station_ph:"输入车站名称…",
+to_work:"上班",to_home:"下班",your_route:"我的路线",weather_bk:"天气 · 布鲁克林",alternatives:"备选路线",
+wind:"风",rain:"降水",home:"家",work:"公司",
+walk_to:"从{place}步行约 {min} 分钟到{station}",
+add_addr:"请在设置中输入{place}地址以显示步行时间。",
+no_route:"未设置路线。点击⚙️添加路段后保存。",
+sev_suspended:"暂停服务",sev_delays:"延误",sev_planned:"计划施工",sev_good:"正常运营",
+cd_min:"<b>{n} 分钟后</b>",cd_now:"<b>现在上车</b>",nx_min:"下一班 {line} <b>{n} 分钟后</b>",nx_now:"<b>{line} 正在上车</b>",
+no_trains:"该方向暂无 {line} 列车。",
+no_feed:"暂时无法获取 {line} 实时到站信息。",
+transfer_at:"在{station}换乘",your_arrives:"{line}将于 <b>{time}</b> 到达。",
+transfer_wait:"等待 {n} 分钟后换乘",transfer_now:"立即换乘",
+waiting_conn:"等待下一班 {line}…",transfer_to:"请在此换乘 {line}。",
+arrive:"到达{station}",arrive_at:"<b>{time}</b> 到达",est_arrival:"预计到达 <b>{time}</b>",arr_unavailable:"无法获取到达时间。",
+station_notices:"车站通知：",
+no_faster:"检测到延误，但目前没有更快的路线。",
+all_clear:"你的路线一切正常。",fastest_opts:"检测到延误 — 最快的路线：",
+alt_sub:"共 {total} 分钟 · 步行 {walk} 分钟到{station}",via:"经由{station}",
+faster:"比你的路线快 {n} 分钟",slower:"比你的路线慢 {n} 分钟",
+tap_timing:"点击查看完整时刻。",alt_route:"备选路线",
+opt_gone:"该路线目前不可用。",back_route:"← 返回我的路线",
+showing_alt:"正在查看备选路线详情。点击“← 返回我的路线”返回。",
+updated:"{time} ET 更新",
+err_load:"无法加载实时数据。请检查网络连接后点击刷新。",
+err_save:"无法保存设置："
+},
+ja:{
+settings_title:"通勤設定",done:"完了",language:"言語",
+home_address:"自宅住所",work_address:"職場住所",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
+route_legs:"経路区間",legs_hint:"乗る電車ごとに1区間 — 乗換なしなら1区間だけ。",
+leg_n:"区間 {n}",board:"乗車",get_off:"下車",remove:"× 削除",add_leg:"+ 区間を追加",
+save:"保存",saving:"保存中…",addr_note:"住所は一度だけ変換され、このデバイスにのみ保存されます。",
+max_legs:"最大4区間。",station_ph:"駅名を入力…",
+to_work:"出勤",to_home:"帰宅",your_route:"マイルート",weather_bk:"天気 · ブルックリン",alternatives:"代替ルート",
+wind:"風",rain:"降水",home:"自宅",work:"職場",
+walk_to:"{place}から{station}まで徒歩約{min}分",
+add_addr:"徒歩時間を表示するには設定で{place}の住所を入力してください。",
+no_route:"ルートが設定されていません。⚙️をタップして区間を追加し保存してください。",
+sev_suspended:"運転見合わせ",sev_delays:"遅延",sev_planned:"工事予定",sev_good:"平常運転",
+cd_min:"<b>{n}分後</b>",cd_now:"<b>今乗車</b>",nx_min:"次の{line} <b>{n}分後</b>",nx_now:"<b>{line} 今乗車中</b>",
+no_trains:"この方向の{line}はありません。",
+no_feed:"{line}のリアルタイム到着情報を取得できません。",
+transfer_at:"{station}で乗換",your_arrives:"{line}は<b>{time}</b>に到着します。",
+transfer_wait:"{n}分待って乗換",transfer_now:"すぐ乗換",
+waiting_conn:"次の{line}を待っています…",transfer_to:"ここで{line}に乗り換えてください。",
+arrive:"{station}到着",arrive_at:"<b>{time}</b> 到着",est_arrival:"到着予定 <b>{time}</b>",arr_unavailable:"到着時刻を取得できません。",
+station_notices:"駅のお知らせ:",
+no_faster:"遅延を検出しましたが、より速いルートがありません。",
+all_clear:"ルートに問題ありません。",fastest_opts:"遅延検出 — 最速ルート:",
+alt_sub:"合計{total}分 · {station}まで徒歩{walk}分",via:"経由 {station}",
+faster:"通常ルートより{n}分速い",slower:"通常ルートより{n}分遅い",
+tap_timing:"タップで詳細時刻。",alt_route:"代替ルート",
+opt_gone:"このルートは現在利用できません。",back_route:"← マイルートに戻る",
+showing_alt:"代替ルート詳細を表示中。「← マイルートに戻る」で戻れます。",
+updated:"{time} ET 更新",
+err_load:"リアルタイムデータを読み込めませんでした。接続を確認して更新してください。",
+err_save:"設定を保存できませんでした:"
+},
+es:{
+settings_title:"Ajustes de viaje",done:"Listo",language:"Idioma",
+home_address:"Dirección de casa",work_address:"Dirección del trabajo",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
+route_legs:"Tramos de ruta",legs_hint:"Uno por tren — ¿sin transbordo? Usa solo uno.",
+leg_n:"Tramo {n}",board:"Subir",get_off:"Bajar",remove:"× Eliminar",add_leg:"+ Añadir tramo",
+save:"Guardar",saving:"Guardando…",addr_note:"Las direcciones se geocodifican una vez y se guardan solo en este dispositivo.",
+max_legs:"Máximo 4 tramos.",station_ph:"Escribe el nombre de la estación…",
+to_work:"Al trabajo",to_home:"A casa",your_route:"Tu ruta",weather_bk:"Clima · Brooklyn",alternatives:"Alternativas",
+wind:"Viento",rain:"Lluvia",home:"casa",work:"trabajo",
+walk_to:"Camina ~{min} min desde {place} hasta {station}",
+add_addr:"Añade tu dirección de {place} en Ajustes para ver el tiempo a pie.",
+no_route:"Sin ruta. Toca el engranaje, añade al menos un tramo y pulsa Guardar.",
+sev_suspended:"Suspendido",sev_delays:"Retrasos",sev_planned:"Obra programada",sev_good:"Servicio normal",
+cd_min:"en <b>{n} min</b>",cd_now:"<b>Abordando ahora</b>",nx_min:"Próximo {line} en <b>{n} min</b>",nx_now:"<b>{line} abordando ahora</b>",
+no_trains:"No hay trenes {line} próximos en esta dirección.",
+no_feed:"Llegadas en vivo no disponibles para la línea {line}.",
+transfer_at:"Transbordo en {station}",your_arrives:"Tu {line} llega a las <b>{time}</b>.",
+transfer_wait:"transbordo tras {n} min de espera",transfer_now:"transbordo ahora",
+waiting_conn:"Esperando la próxima conexión {line}…",transfer_to:"Transborda a la línea {line} aquí.",
+arrive:"Llegada a {station}",arrive_at:"Llegada <b>{time}</b>",est_arrival:"Llegada estimada <b>{time}</b>",arr_unavailable:"Hora de llegada no disponible.",
+station_notices:"Avisos de estación:",
+no_faster:"Retraso detectado, pero no hay ruta más rápida ahora.",
+all_clear:"Todo despejado en tu ruta.",fastest_opts:"Retraso detectado — opciones más rápidas:",
+alt_sub:"{total} min en total · {walk} min a pie hasta {station}",via:"vía {station}",
+faster:"{n} min más rápido que tu ruta",slower:"{n} min más lento que tu ruta",
+tap_timing:"Toca para ver horarios.",alt_route:"Ruta alternativa",
+opt_gone:"Esta opción ya no está disponible.",back_route:"← Volver a mi ruta",
+showing_alt:"Viendo detalle alternativo. Toca “← Volver a mi ruta” para volver.",
+updated:"Actualizado {time} ET",
+err_load:"No se pudieron cargar los datos en vivo. Revisa tu conexión y pulsa Actualizar.",
+err_save:"No se pudo guardar: "
+},
+fr:{
+settings_title:"Réglages du trajet",done:"OK",language:"Langue",
+home_address:"Adresse du domicile",work_address:"Adresse du travail",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
+route_legs:"Segments du trajet",legs_hint:"Un par train — sans correspondance ? Un seul suffit.",
+leg_n:"Segment {n}",board:"Embarquement",get_off:"Descente",remove:"× Supprimer",add_leg:"+ Ajouter un segment",
+save:"Enregistrer",saving:"Enregistrement…",addr_note:"Les adresses sont géocodées une fois et stockées uniquement sur cet appareil.",
+max_legs:"4 segments maximum.",station_ph:"Nom de la station…",
+to_work:"Aller au travail",to_home:"Rentrer",your_route:"Votre trajet",weather_bk:"Météo · Brooklyn",alternatives:"Alternatives",
+wind:"Vent",rain:"Pluie",home:"domicile",work:"travail",
+walk_to:"~{min} min à pied depuis {place} jusqu'à {station}",
+add_addr:"Ajoutez votre adresse ({place}) dans Réglages pour le temps de marche.",
+no_route:"Aucun trajet. Touchez l'engrenage, ajoutez un segment puis Enregistrer.",
+sev_suspended:"Suspendu",sev_delays:"Retards",sev_planned:"Travaux prévus",sev_good:"Service normal",
+cd_min:"dans <b>{n} min</b>",cd_now:"<b>Embarquement</b>",nx_min:"Prochain {line} dans <b>{n} min</b>",nx_now:"<b>{line} embarquement</b>",
+no_trains:"Aucun train {line} prochain dans cette direction.",
+no_feed:"Arrivées en direct indisponibles pour la ligne {line}.",
+transfer_at:"Correspondance à {station}",your_arrives:"Votre {line} arrive à <b>{time}</b>.",
+transfer_wait:"correspondance après {n} min d'attente",transfer_now:"correspondance immédiate",
+waiting_conn:"En attente de la prochaine correspondance {line}…",transfer_to:"Changez pour la ligne {line} ici.",
+arrive:"Arrivée à {station}",arrive_at:"Arrivée <b>{time}</b>",est_arrival:"Arrivée estimée <b>{time}</b>",arr_unavailable:"Heure d'arrivée indisponible.",
+station_notices:"Infos stations :",
+no_faster:"Perturbation détectée, mais aucun itinéraire plus rapide.",
+all_clear:"Rien à signaler sur votre trajet.",fastest_opts:"Perturbation — itinéraires les plus rapides :",
+alt_sub:"{total} min au total · {walk} min à pied jusqu'à {station}",via:"via {station}",
+faster:"{n} min plus rapide que votre trajet",slower:"{n} min plus lent que votre trajet",
+tap_timing:"Toucher pour les horaires.",alt_route:"Itinéraire alternatif",
+opt_gone:"Cette option n'est plus disponible.",back_route:"← Retour à mon trajet",
+showing_alt:"Détail alternatif affiché. Touchez “← Retour à mon trajet” pour revenir.",
+updated:"Mis à jour {time} ET",
+err_load:"Données en direct indisponibles. Vérifiez la connexion puis actualisez.",
+err_save:"Enregistrement impossible : "
+}
+};
+
+function sevLabel(cls){ return cls==="red"?t("sev_suspended"):cls==="amber"?t("sev_delays"):cls==="blue"?t("sev_planned"):t("sev_good"); }
+function cdHtml(sec){ const m=Math.round((sec-Date.now()/1000)/60); return m<=0?t("cd_now"):t("cd_min",{n:m}); }
+function nxHtml(line,sec){ const m=Math.round((sec-Date.now()/1000)/60); return m<=0?t("nx_now",{line:line}):t("nx_min",{line:line,n:m}); }
+
+/* weather condition names per language (WMO codes) */
+const WMO_L={
+ko:{0:"맑음",1:"대체로 맑음",2:"부분적 흐림",3:"흐림",45:"안개",48:"안개",51:"약한 이슬비",53:"이슬비",55:"짙은 이슬비",56:"언 이슬비",57:"언 이슬비",61:"약한 비",63:"비",65:"강한 비",66:"언 비",67:"언 비",71:"약한 눈",73:"눈",75:"강한 눈",77:"싸락눈",80:"약한 소나기",81:"소나기",82:"강한 소나기",85:"약한 눈 소나기",86:"눈 소나기",95:"천둥번개",96:"우박 동반 천둥번개",99:"우박 동반 천둥번개"},
+zh:{0:"晴",1:"大致晴朗",2:"多云",3:"阴",45:"雾",48:"雾",51:"毛毛雨",53:"毛毛雨",55:"浓毛毛雨",56:"冻毛毛雨",57:"冻毛毛雨",61:"小雨",63:"雨",65:"大雨",66:"冻雨",67:"冻雨",71:"小雪",73:"雪",75:"大雪",77:"米雪",80:"小阵雨",81:"阵雨",82:"大阵雨",85:"小阵雪",86:"阵雪",95:"雷暴",96:"雷暴伴冰雹",99:"雷暴伴冰雹"},
+ja:{0:"晴れ",1:"概ね晴れ",2:"曇り時々晴れ",3:"曇り",45:"霧",48:"霧",51:"弱い霧雨",53:"霧雨",55:"濃い霧雨",56:"着氷性の霧雨",57:"着氷性の霧雨",61:"弱い雨",63:"雨",65:"強い雨",66:"着氷性の雨",67:"着氷性の雨",71:"弱い雪",73:"雪",75:"強い雪",77:"あられ",80:"弱いにわか雨",81:"にわか雨",82:"強いにわか雨",85:"弱いにわか雪",86:"にわか雪",95:"雷雨",96:"雹を伴う雷雨",99:"雹を伴う雷雨"},
+es:{0:"Despejado",1:"Mayormente despejado",2:"Parcialmente nublado",3:"Cubierto",45:"Niebla",48:"Niebla",51:"Llovizna ligera",53:"Llovizna",55:"Llovizna densa",56:"Llovizna helada",57:"Llovizna helada",61:"Lluvia ligera",63:"Lluvia",65:"Lluvia intensa",66:"Lluvia helada",67:"Lluvia helada",71:"Nieve ligera",73:"Nieve",75:"Nieve intensa",77:"Granos de nieve",80:"Chubascos ligeros",81:"Chubascos",82:"Chubascos intensos",85:"Chubascos de nieve ligeros",86:"Chubascos de nieve",95:"Tormenta",96:"Tormenta con granizo",99:"Tormenta con granizo"},
+fr:{0:"Dégagé",1:"Plutôt dégagé",2:"Partiellement nuageux",3:"Couvert",45:"Brouillard",48:"Brouillard",51:"Bruine légère",53:"Bruine",55:"Bruine dense",56:"Bruine verglaçante",57:"Bruine verglaçante",61:"Pluie légère",63:"Pluie",65:"Forte pluie",66:"Pluie verglaçante",67:"Pluie verglaçante",71:"Neige légère",73:"Neige",75:"Forte neige",77:"Grains de neige",80:"Averses légères",81:"Averses",82:"Fortes averses",85:"Averses de neige légères",86:"Averses de neige",95:"Orage",96:"Orage avec grêle",99:"Orage avec grêle"}
 };
 
 /* ===== state ===== */
@@ -234,13 +457,8 @@ STATIONS.forEach(s=>{ ST_BY_ID[s.id]=s; });
 const $ = id=>document.getElementById(id);
 const num = v=>v==null?0:Number(v);
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-function fmtClock(sec){ return new Date(sec*1000).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZone:TZ}); }
+function fmtClock(sec){ const d=new Date(sec*1000); const l=(typeof S!=="undefined"&&S.lang)||"en"; if(l==="ko"||l==="zh"||l==="ja"||l==="fr"){ return d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",timeZone:TZ}); } return d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZone:TZ}); }
 function fmtHM(){ return new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",second:"2-digit",timeZone:TZ}); }
-function countdown(sec){
-  const m=Math.round((sec-Date.now()/1000)/60);
-  if(m<=0) return "now";
-  return m===1 ? "1 min" : m+" min";
-}
 function tempBoth(f){ return Math.round(f)+"°F ("+Math.round((f-32)*5/9)+"°C)"; }
 function havKm(a,b,c,d){
   const R=6371, t=Math.PI/180;
@@ -562,11 +780,11 @@ function renderWeather(w){
     const cur=w.current, daily=w.daily;
     $("wx-temp").textContent=tempBoth(cur.temperature_2m);
     const code=cur.weather_code;
-    $("wx-desc").innerHTML='<span class="wx-icon">'+(WMO_ICON[code]||"")+'</span>'+esc(WMO[code]||"");
-    $("wx-hilo").textContent="H "+tempBoth(daily.temperature_2m_max[0])+"  ·  L "+tempBoth(daily.temperature_2m_min[0]);
+    $("wx-desc").innerHTML='<span class="wx-icon">'+(WMO_ICON[code]||"")+'</span>'+esc(wmoText(code));
+    $("wx-hilo").textContent="H "+tempBoth(daily.temperature_2m_max[0])+" · L "+tempBoth(daily.temperature_2m_min[0]);
     const wind=cur.wind_speed_10m!=null?Math.round(cur.wind_speed_10m)+" mph":"—";
     const rain=daily.precipitation_probability_max&&daily.precipitation_probability_max[0]!=null?daily.precipitation_probability_max[0]+"%":"—";
-    $("wx-extra").innerHTML='<span>💨 Wind <b>'+wind+'</b></span><span>🌧️ Rain <b>'+rain+'</b></span>';
+    $("wx-extra").innerHTML='<span>💨 '+t("wind")+' <b>'+wind+'</b></span><span>🌧️ '+t("rain")+' <b>'+rain+'</b></span>';
   }catch(e){
     $("wx-temp").textContent="—";
   }
@@ -579,13 +797,13 @@ function renderLegs(legResults, box){
       const d=document.createElement("div");
       d.className="leg";
       let html='<div class="leg-head">'+lineBadge(leg.line)+'<span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span></div>';
-      html+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(SEV_LABEL[st.cls]||"Good service")+'</div>';
+      html+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(sevLabel(st.cls))+'</div>';
       if(r.trip){
-        html+='<div class="leg-time">in <b>'+countdown(r.trip.bt)+'</b> <span class="leg-sub">('+fmtClock(r.trip.bt)+')</span></div>';
+        html+='<div class="leg-time">'+cdHtml(r.trip.bt)+' <span class="leg-sub">('+fmtClock(r.trip.bt)+')</span></div>';
       }else if(!r.feedOk){
-        html+='<div class="leg-sub">Live arrivals unavailable for the '+esc(leg.line)+' line right now.</div>';
+        html+='<div class="leg-sub">'+esc(t("no_feed",{line:leg.line}))+'</div>';
       }else{
-        html+='<div class="leg-sub">No upcoming '+esc(leg.line)+' trains found for this direction.</div>';
+        html+='<div class="leg-sub">'+esc(t("no_trains",{line:leg.line}))+'</div>';
       }
       if(st.text) html+='<div class="alert-text">'+esc(st.text)+'</div>';
       d.innerHTML=html;
@@ -596,18 +814,18 @@ function renderLegs(legResults, box){
       const t1=prev.trip, t2=r.trip;
       const td=document.createElement("div");
       td.className="leg transfer";
-      let th='<div class="leg-head">'+lineBadge(leg.line)+'<span>Transfer at '+esc(stationName(prev.leg.to))+'</span></div>';
-      th+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(SEV_LABEL[st.cls]||"Good service")+'</div>';
+      let th='<div class="leg-head">'+lineBadge(leg.line)+'<span>'+esc(t("transfer_at",{station:stationName(prev.leg.to)}))+'</span></div>';
+      th+='<div class="status-line"><span class="dot '+dotCls(st.cls)+'"></span>'+esc(sevLabel(st.cls))+'</div>';
       if(t1&&t1.at){
-        th+='<div class="leg-time">Your '+esc(prev.leg.line)+' arrives at <b>'+fmtClock(t1.at)+'</b>.</div>';
+        th+='<div class="leg-time">'+t("your_arrives",{line:esc(prev.leg.line),time:fmtClock(t1.at)})+'</div>';
         if(t2){
           const wait=Math.max(0,Math.round((t2.bt-t1.at)/60));
-          th+='<div class="leg-time">in <b>'+countdown(t2.bt)+'</b> <span class="leg-sub">('+fmtClock(t2.bt)+')</span> &mdash; transfer'+(wait>0?' after a '+wait+'-min wait':' now')+'.</div>';
+          th+='<div class="leg-time">'+nxHtml(leg.line,t2.bt)+' <span class="leg-sub">('+fmtClock(t2.bt)+')</span> &mdash; '+(wait>0?t("transfer_wait",{n:wait}):t("transfer_now"))+'.</div>';
         }else{
-          th+='<div class="leg-sub">Waiting for the next '+esc(leg.line)+' connection&hellip;</div>';
+          th+='<div class="leg-sub">'+esc(t("waiting_conn",{line:leg.line}))+'</div>';
         }
       }else{
-        th+='<div class="leg-sub">Transfer to the '+esc(leg.line)+' line here.</div>';
+        th+='<div class="leg-sub">'+esc(t("transfer_to",{line:leg.line}))+'</div>';
       }
       if(st.text) th+='<div class="alert-text">'+esc(st.text)+'</div>';
       td.innerHTML=th;
@@ -615,20 +833,20 @@ function renderLegs(legResults, box){
     }
     // arrival card after last leg
     if(i===legResults.length-1){
-      const t=r.trip;
+      const trip=r.trip;
       const fd=document.createElement("div");
       fd.className="leg";
-      fd.innerHTML='<div class="leg-head">Arrive '+esc(stationName(leg.to))+'</div>'+
-        (t&&t.at
-          ? '<div class="leg-time">Estimated arrival <b>'+fmtClock(t.at)+'</b></div>'
-          : '<div class="leg-sub">Arrival time unavailable.</div>');
+      fd.innerHTML='<div class="leg-head">'+esc(t("arrive",{station:stationName(leg.to)}))+'</div>'+
+        (trip&&trip.at
+          ? '<div class="leg-time">'+t("est_arrival",{time:fmtClock(trip.at)})+'</div>'
+          : '<div class="leg-sub">'+esc(t("arr_unavailable"))+'</div>');
       box.appendChild(fd);
     }
   });
   if(stationNotes.length){
     const n=document.createElement("div");
     n.className="alert-text";
-    n.innerHTML="<b>Station notices:</b><br>"+stationNotes.slice(0,3).map(esc).join("<br>");
+    n.innerHTML=esc(t("station_notices"))+"<br>"+stationNotes.slice(0,3).map(esc).join("<br>");
     box.appendChild(n);
   }
 }
@@ -640,8 +858,8 @@ function renderRoute(legResults, walkMin){
   const w=document.createElement("div");
   w.className="leg-sub";
   w.style.margin="8px 0";
-  w.textContent = walkMin==null ? "Add your "+(S.direction==="commute"?"home":"work")+" address in Settings for walk time."
-    : "Walk ~"+Math.round(walkMin)+" min from "+(S.direction==="commute"?"home":"work")+" to "+firstSt;
+  w.textContent = walkMin==null ? t("add_addr",{place:t(S.direction==="commute"?"home":"work")})
+    : t("walk_to",{min:Math.round(walkMin),place:t(S.direction==="commute"?"home":"work"),station:esc(firstSt)});
   box.appendChild(w);
   renderLegs(legResults, box);
 }
@@ -653,17 +871,17 @@ function renderAlts(options, legResults){
     const d=document.createElement("div");
     if(disrupted){
       d.className="leg-sub";
-      d.textContent="Disruption detected, but no faster route found right now.";
+      d.textContent=t("no_faster");
     }else{
       d.className="allclear";
-      d.textContent="All clear on your route.";
+      d.textContent=t("all_clear");
     }
     box.appendChild(d);
     return;
   }
   const p=document.createElement("div");
   p.className="leg-sub";
-  p.textContent="Disruption detected — fastest options:";
+  p.textContent=t("fastest_opts");
   box.appendChild(p);
   const normalArr=(legResults.length&&legResults[legResults.length-1].trip)
     ? legResults[legResults.length-1].trip.at : null;
@@ -673,18 +891,18 @@ function renderAlts(options, legResults){
     d.className="alt";
     d.style.cursor="pointer";
     const badges=opt.legs.map(l=>lineBadge(l.line)).join("");
-    let sub=total+" min total · walk "+opt.walkMin+" min to "+esc(stationName(opt.legs[0].from));
-    if(opt.legs.length>1) sub+=" · via "+esc(stationName(opt.legs[0].to));
+    let sub=t("alt_sub",{total:total,walk:opt.walkMin,station:esc(stationName(opt.legs[0].from))});
+    if(opt.legs.length>1) sub+=" · "+t("via",{station:esc(stationName(opt.legs[0].to))});
     let cmp="";
     if(normalArr){
       const diff=Math.round((normalArr-opt.arrivalSec)/60);
       cmp=diff>0
-        ? '<div style="color:var(--green);font-weight:700">'+diff+' min faster than your route</div>'
-        : '<div class="leg-sub">'+(-diff)+' min slower than your route</div>';
+        ? '<div style="color:var(--green);font-weight:700">'+esc(t("faster",{n:diff}))+'</div>'
+        : '<div class="leg-sub">'+esc(t("slower",{n:-diff}))+'</div>';
     }
-    d.innerHTML='<div class="leg-head">'+badges+'<span>Arrive <b>'+fmtClock(opt.arrivalSec)+'</b></span></div>'+
+    d.innerHTML='<div class="leg-head">'+badges+'<span>'+t("arrive_at",{time:fmtClock(opt.arrivalSec)})+'</span></div>'+
       '<div class="leg-sub">'+sub+'</div>'+cmp+
-      '<div class="leg-sub">Tap for full timing.</div>';
+      '<div class="leg-sub">'+esc(t("tap_timing"))+'</div>';
     d.onclick=()=>{ viewingAlt=opt; loadAll(); window.scrollTo(0,0); };
     box.appendChild(d);
   });
@@ -720,13 +938,13 @@ async function renderAltDetail(opt){
   const back=document.createElement("button");
   back.className="btn";
   back.style.marginBottom="8px";
-  back.textContent="← Back to my route";
+  back.textContent=t("back_route");
   back.onclick=()=>{ viewingAlt=null; loadAll(); };
   box.appendChild(back);
   const h=document.createElement("div");
   h.className="leg-head";
   h.style.marginBottom="4px";
-  h.innerHTML="Alternative route "+opt.legs.map(l=>lineBadge(l.line)).join("");
+  h.innerHTML=t("alt_route")+" "+opt.legs.map(l=>lineBadge(l.line)).join("");
   box.appendChild(h);
 
   const o=originInfo();
@@ -734,7 +952,7 @@ async function renderAltDetail(opt){
   const w=document.createElement("div");
   w.className="leg-sub";
   w.style.margin="8px 0";
-  w.textContent="Walk ~"+opt.walkMin+" min from "+(S.direction==="commute"?"home":"work")+" to "+(st?st.name:"");
+  w.textContent=t("walk_to",{min:opt.walkMin,place:t(S.direction==="commute"?"home":"work"),station:esc(st?st.name:"")});
   box.appendChild(w);
 
   // recompute fresh so the detail is never stale
@@ -745,11 +963,11 @@ async function renderAltDetail(opt){
   }else{
     const d=document.createElement("div");
     d.className="leg-sub";
-    d.textContent="This option is no longer available right now.";
+    d.textContent=t("opt_gone");
     box.appendChild(d);
   }
-  $("alts").innerHTML='<div class="leg-sub">Showing alternative detail. Tap "← Back to my route" to return.</div>';
-  $("updated").textContent="Updated "+fmtHM()+" ET";
+  $("alts").innerHTML='<div class="leg-sub">'+esc(t("showing_alt"))+'</div>';
+  $("updated").textContent=t("updated",{time:fmtHM()});
 }
 
 /* ===== main load ===== */
@@ -771,7 +989,7 @@ async function loadAll(){
     }else{
       const legs=getLegs();
       if(!legs.length){
-        $("legs").innerHTML='<div class="leg-sub">No route set. Tap the gear icon, add at least one leg (board → get off), then Save.</div>';
+        $("legs").innerHTML='<div class="leg-sub">'+esc(t("no_route"))+'</div>';
         renderAlts([], []);
       }else{
         const legResults=await computeRoute(legs);
@@ -784,17 +1002,17 @@ async function loadAll(){
         const alts=hasDisruption(legResults)?await findFastRoutes(legResults):[];
         renderAlts(alts, legResults);
       }
-      $("updated").textContent="Updated "+fmtHM()+" ET";
+      $("updated").textContent=t("updated",{time:fmtHM()});
     }
   }catch(e){
-    showErr("Couldn't load live data. Check your connection and tap Refresh. ("+String(e.message||e).slice(0,80)+")");
+    showErr(t("err_load")+" ("+String(e.message||e).slice(0,80)+")");
   }
   loading=false;
 }
 
 /* ===== searchable station picker ===== */
 function makePicker(el, leg, which, showChips){
-  el.innerHTML='<input class="f-input" placeholder="Type station name…" autocomplete="off">'+
+  el.innerHTML='<input class="f-input" placeholder=""+t("station_ph")+"" autocomplete="off">'+
     '<div class="picker-list"></div>'+(showChips?'<div class="linechips"></div>':"");
   const input=el.querySelector("input"), list=el.querySelector(".picker-list"),
         chips=el.querySelector(".linechips");
@@ -875,17 +1093,17 @@ function renderLegEditors(){
     const d=document.createElement("div");
     const head=document.createElement("div");
     head.className="row"; head.style.marginTop="10px";
-    head.innerHTML='<div class="f-label" style="margin:0">Leg '+(idx+1)+'</div>';
+    head.innerHTML='<div class="f-label" style="margin:0">'+esc(t("leg_n",{n:idx+1}))+'</div>';
     if(S.legs.length>1){
       const del=document.createElement("button");
-      del.className="chip"; del.textContent="× Remove";
+      del.className="chip"; del.textContent=t("remove");
       del.onclick=()=>{ S.legs.splice(idx,1); saveSettings(); renderLegEditors(); };
       head.appendChild(del);
     }
     d.appendChild(head);
-    const fl=document.createElement("div"); fl.className="f-label"; fl.textContent="Board";
+    const fl=document.createElement("div"); fl.className="f-label"; fl.textContent=t("board");
     const fp=document.createElement("div"); fp.className="picker";
-    const tl=document.createElement("div"); tl.className="f-label"; tl.textContent="Get off";
+    const tl=document.createElement("div"); tl.className="f-label"; tl.textContent=t("get_off");
     const tp=document.createElement("div"); tp.className="picker";
     d.appendChild(fl); d.appendChild(fp); d.appendChild(tl); d.appendChild(tp);
     wrap.appendChild(d);
@@ -893,15 +1111,51 @@ function renderLegEditors(){
     makePicker(tp, leg, "to", false);
   });
 }
+function applyI18n(){
+  document.title="Brooklyn Commute";
+  $("h-weather").textContent=t("weather_bk");
+  $("h-route").textContent=t("your_route");
+  $("h-alt").textContent=t("alternatives");
+  document.querySelectorAll("#dir-toggle .seg-btn").forEach(x=>{
+    x.textContent=t(x.dataset.dir==="commute"?"to_work":"to_home");
+  });
+  $("set-title").textContent=t("settings_title");
+  $("sheet-close").textContent=t("done");
+  $("lbl-lang").textContent=t("language");
+  $("lbl-home").textContent=t("home_address");
+  $("lbl-work").textContent=t("work_address");
+  $("lbl-legs").textContent=t("route_legs");
+  $("lbl-legs-hint").textContent=t("legs_hint");
+  $("set-home").placeholder=t("home_ph");
+  $("set-work").placeholder=t("work_ph");
+  $("add-leg").textContent=t("add_leg");
+  $("set-save").textContent=t("save");
+  $("lbl-note").textContent=t("addr_note");
+  renderLangChips();
+  renderLegEditors();
+}
+function renderLangChips(){
+  const wrap=$("lang-chips");
+  if(!wrap) return;
+  wrap.innerHTML="";
+  LANGS.forEach(([code,name])=>{
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="chip"+((S.lang||"en")===code?" sel":"");
+    b.textContent=name;
+    b.onclick=()=>{ S.lang=code; saveSettings(); applyI18n(); loadAll(); };
+    wrap.appendChild(b);
+  });
+}
 function initSettings(){
   $("set-home").value=S.home.label||"";
   $("set-work").value=S.work.label||"";
   attachAddrAC("set-home","home-ac");
   attachAddrAC("set-work","work-ac");
-  renderLegEditors();
+  applyI18n();
   $("add-leg").onclick=()=>{
     if(!Array.isArray(S.legs)) S.legs=[];
-    if(S.legs.length>=4){ showErr("Maximum 4 legs."); return; }
+    if(S.legs.length>=4){ showErr(t("max_legs")); return; }
     S.legs.push({line:"", from:"", to:""});
     saveSettings(); renderLegEditors();
   };
@@ -911,7 +1165,7 @@ function initSettings(){
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();
     const btn=$("set-save");
-    btn.textContent="Saving…";
+    btn.textContent=t("saving");
     try{
       if(hl&&hl!==S.home.label){
         const hi=$("set-home");
@@ -926,8 +1180,8 @@ function initSettings(){
       saveSettings();
       $("sheet").classList.remove("open");
       loadAll();
-    }catch(e){ showErr("Couldn't save settings: "+String(e.message||e).slice(0,80)); }
-    btn.textContent="Save";
+    }catch(e){ showErr(t("err_save")+String(e.message||e).slice(0,80)); }
+    btn.textContent=t("save");
   };
 }
 

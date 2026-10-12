@@ -65,6 +65,12 @@ body{margin:0; background:var(--bg); color:var(--text);
 .tt-cur{font-weight:700;}
 .tt-tag{color:#8E8E93; font-size:13px;}
 .tt-cur .tt-tag{color:#007AFF;}
+.planned{background:#FFF9E6; border-radius:14px; padding:12px 14px; margin:10px 0;}
+.planned-head{display:flex; align-items:center; gap:6px; font-weight:700; font-size:15px;}
+.planned-item{margin-top:8px; padding-top:8px; border-top:1px solid rgba(0,0,0,0.08); cursor:pointer;}
+.planned-title{font-size:14px; margin-top:4px; line-height:1.35;}
+.planned-when{color:#8E8E93; font-size:13px; margin-top:2px;}
+.planned-desc{font-size:13px; color:#3A3A3C; margin-top:6px; line-height:1.4; display:none;}
 .leg-time b{font-size:22px; font-weight:700; letter-spacing:-.01em; font-variant-numeric:tabular-nums;}
 .transfer{background:var(--bg);}
 .alert-text{font-size:13px; color:var(--muted); margin-top:8px; line-height:1.5;}
@@ -132,6 +138,8 @@ button{font:inherit;}
   <section class="tier tier-wxstrip" id="tier-weather">
     <div class="wx-strip" id="wx-strip">&ndash;</div>
   </section>
+
+  <div id="planned" style="display:none"></div>
 
   <section class="tier" id="tier-route">
     <h2 id="h-route">Your route</h2>
@@ -234,7 +242,7 @@ settings_title:"Commute settings",done:"Done",language:"Language",
 home_address:"Home address",work_address:"Work address",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
 route_legs:"Route legs",legs_hint:"One per train — no transfer? Just use one leg.",
 leg_n:"Leg {n}",board:"Board",get_off:"Get off",remove:"× Remove",add_leg:"+ Add leg",
-save:"Save",saving:"Saving…",addr_note:"Addresses are geocoded once and stored on this device only.",walk_time:"Walk time (minutes)",walk_hint:"How long it takes you to walk to the first station. Leave blank to auto-calculate.",walk_auto:"Auto",walk_from_home:"Home → station",walk_from_work:"Work → station",tt_prev:"Previous",
+save:"Save",saving:"Saving…",addr_note:"Addresses are geocoded once and stored on this device only.",walk_time:"Walk time (minutes)",walk_hint:"How long it takes you to walk to the first station. Leave blank to auto-calculate.",walk_auto:"Auto",walk_from_home:"Home → station",walk_from_work:"Work → station",tt_prev:"Previous",planned_work:"Planned work",tomorrow:"Tomorrow",today:"Today",
 max_legs:"Maximum 4 legs.",station_ph:"Type station name…",
 to_work:"To Work",to_home:"To Home",your_route:"Your route",alternatives:"Alternatives",
 wind:"Wind",rain:"Rain",home:"home",work:"work",
@@ -266,7 +274,7 @@ settings_title:"출퇴근 설정",done:"완료",language:"언어",
 home_address:"집 주소",work_address:"직장 주소",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
 route_legs:"경로 구간",legs_hint:"타는 열차마다 하나씩 — 환승 없으면 1개만.",
 leg_n:"구간 {n}",board:"탑승",get_off:"하차",remove:"× 삭제",add_leg:"+ 구간 추가",
-save:"저장",saving:"저장 중…",addr_note:"주소는 한 번만 변환되어 이 기기에만 저장됩니다.",walk_time:"도보 시간 (분)",walk_hint:"첫 역까지 걸리는 시간. 비워두면 자동 계산됩니다.",walk_auto:"자동",walk_from_home:"집 → 지하철역",walk_from_work:"회사 → 지하철역",tt_prev:"이전 열차",
+save:"저장",saving:"저장 중…",addr_note:"주소는 한 번만 변환되어 이 기기에만 저장됩니다.",walk_time:"도보 시간 (분)",walk_hint:"첫 역까지 걸리는 시간. 비워두면 자동 계산됩니다.",walk_auto:"자동",walk_from_home:"집 → 지하철역",walk_from_work:"회사 → 지하철역",tt_prev:"이전 열차",planned_work:"예정된 공사",tomorrow:"내일",today:"오늘",
 max_legs:"최대 4개 구간.",station_ph:"역 이름 입력…",
 to_work:"출근",to_home:"퇴근",your_route:"내 경로",alternatives:"대체 경로",
 wind:"바람",rain:"강수",home:"집",work:"직장",
@@ -298,7 +306,7 @@ settings_title:"通勤设置",done:"完成",language:"语言",
 home_address:"家庭地址",work_address:"工作地址",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
 route_legs:"路线段",legs_hint:"每乘一趟车一段 — 不换乘？只用一段。",
 leg_n:"第 {n} 段",board:"上车",get_off:"下车",remove:"× 删除",add_leg:"+ 添加路段",
-save:"保存",saving:"保存中…",addr_note:"地址仅转换一次，只保存在此设备上。",walk_time:"步行时间（分钟）",walk_hint:"步行到第一站的时间。留空则自动计算。",walk_auto:"自动",walk_from_home:"家 → 地铁站",walk_from_work:"公司 → 地铁站",tt_prev:"上一班",
+save:"保存",saving:"保存中…",addr_note:"地址仅转换一次，只保存在此设备上。",walk_time:"步行时间（分钟）",walk_hint:"步行到第一站的时间。留空则自动计算。",walk_auto:"自动",walk_from_home:"家 → 地铁站",walk_from_work:"公司 → 地铁站",tt_prev:"上一班",planned_work:"计划施工",tomorrow:"明天",today:"今天",
 max_legs:"最多 4 段。",station_ph:"输入车站名称…",
 to_work:"上班",to_home:"下班",your_route:"我的路线",alternatives:"备选路线",
 wind:"风",rain:"降水",home:"家",work:"公司",
@@ -330,7 +338,7 @@ settings_title:"通勤設定",done:"完了",language:"言語",
 home_address:"自宅住所",work_address:"職場住所",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
 route_legs:"経路区間",legs_hint:"乗る電車ごとに1区間 — 乗換なしなら1区間だけ。",
 leg_n:"区間 {n}",board:"乗車",get_off:"下車",remove:"× 削除",add_leg:"+ 区間を追加",
-save:"保存",saving:"保存中…",addr_note:"住所は一度だけ変換され、このデバイスにのみ保存されます。",walk_time:"徒歩時間（分）",walk_hint:"最初の駅までの徒歩時間。空欄で自動計算。",walk_auto:"自動",walk_from_home:"自宅 → 駅",walk_from_work:"職場 → 駅",tt_prev:"前の列車",
+save:"保存",saving:"保存中…",addr_note:"住所は一度だけ変換され、このデバイスにのみ保存されます。",walk_time:"徒歩時間（分）",walk_hint:"最初の駅までの徒歩時間。空欄で自動計算。",walk_auto:"自動",walk_from_home:"自宅 → 駅",walk_from_work:"職場 → 駅",tt_prev:"前の列車",planned_work:"工事予定",tomorrow:"明日",today:"今日",
 max_legs:"最大4区間。",station_ph:"駅名を入力…",
 to_work:"出勤",to_home:"帰宅",your_route:"マイルート",alternatives:"代替ルート",
 wind:"風",rain:"降水",home:"自宅",work:"職場",
@@ -362,7 +370,7 @@ settings_title:"Ajustes de viaje",done:"Listo",language:"Idioma",
 home_address:"Dirección de casa",work_address:"Dirección del trabajo",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
 route_legs:"Tramos de ruta",legs_hint:"Uno por tren — ¿sin transbordo? Usa solo uno.",
 leg_n:"Tramo {n}",board:"Subir",get_off:"Bajar",remove:"× Eliminar",add_leg:"+ Añadir tramo",
-save:"Guardar",saving:"Guardando…",addr_note:"Las direcciones se geocodifican una vez y se guardan solo en este dispositivo.",walk_time:"Tiempo a pie (min)",walk_hint:"Cuánto tardas a pie hasta la primera estación. Déjalo en blanco para cálculo automático.",walk_auto:"Auto",walk_from_home:"Casa → estación",walk_from_work:"Trabajo → estación",tt_prev:"Anterior",
+save:"Guardar",saving:"Guardando…",addr_note:"Las direcciones se geocodifican una vez y se guardan solo en este dispositivo.",walk_time:"Tiempo a pie (min)",walk_hint:"Cuánto tardas a pie hasta la primera estación. Déjalo en blanco para cálculo automático.",walk_auto:"Auto",walk_from_home:"Casa → estación",walk_from_work:"Trabajo → estación",tt_prev:"Anterior",planned_work:"Obra planificada",tomorrow:"Mañana",today:"Hoy",
 max_legs:"Máximo 4 tramos.",station_ph:"Escribe el nombre de la estación…",
 to_work:"Al trabajo",to_home:"A casa",your_route:"Tu ruta",alternatives:"Alternativas",
 wind:"Viento",rain:"Lluvia",home:"casa",work:"trabajo",
@@ -394,7 +402,7 @@ settings_title:"Réglages du trajet",done:"OK",language:"Langue",
 home_address:"Adresse du domicile",work_address:"Adresse du travail",home_ph:"e.g. 123 Main St, Brooklyn NY 11238",work_ph:"e.g. 456 Broadway, Brooklyn NY 11206",
 route_legs:"Segments du trajet",legs_hint:"Un par train — sans correspondance ? Un seul suffit.",
 leg_n:"Segment {n}",board:"Embarquement",get_off:"Descente",remove:"× Supprimer",add_leg:"+ Ajouter un segment",
-save:"Enregistrer",saving:"Enregistrement…",addr_note:"Les adresses sont géocodées une fois et stockées uniquement sur cet appareil.",walk_time:"Temps de marche (min)",walk_hint:"Temps de marche jusqu'à la première station. Laisser vide pour calcul auto.",walk_auto:"Auto",walk_from_home:"Domicile → station",walk_from_work:"Travail → station",tt_prev:"Précédent",
+save:"Enregistrer",saving:"Enregistrement…",addr_note:"Les adresses sont géocodées une fois et stockées uniquement sur cet appareil.",walk_time:"Temps de marche (min)",walk_hint:"Temps de marche jusqu'à la première station. Laisser vide pour calcul auto.",walk_auto:"Auto",walk_from_home:"Domicile → station",walk_from_work:"Travail → station",tt_prev:"Précédent",planned_work:"Travaux prévus",tomorrow:"Demain",today:"Aujourd'hui",
 max_legs:"4 segments maximum.",station_ph:"Nom de la station…",
 to_work:"Aller au travail",to_home:"Rentrer",your_route:"Votre trajet",alternatives:"Alternatives",
 wind:"Vent",rain:"Pluie",home:"domicile",work:"travail",
@@ -541,12 +549,12 @@ async function fetchWeather(lat,lon){
 }
 
 /* ===== MTA service status (alerts JSON) ===== */
-let lineStatus={}, stationNotes=[];
+let lineStatus={}, stationNotes=[], plannedRaw=[];
 async function fetchStatus(){
   const r=await fetch(ALERTS_URL);
   const j=await r.json();
   const now=Math.floor(Date.now()/1000);
-  lineStatus={}; stationNotes=[];
+  lineStatus={}; stationNotes=[]; plannedRaw=[];
   const items=[];
   for(const e of (j.entity||[])){
     const a=e.alert||{};
@@ -555,7 +563,30 @@ async function fetchStatus(){
       const s=num(ap.start), en=num(ap.end)||1e15;
       if(s<=now&&now<=en){ active=true; break; }
     }
-    if(!active) continue;
+    if(!active){
+      // future planned notice: take the soonest upcoming period
+      let ns=null;
+      for(const ap of (a.active_period||[])){
+        const s=num(ap.start);
+        if(s>now&&(ns==null||s<ns)) ns=s;
+      }
+      if(ns!=null&&ns<=now+7*86400){
+        let en=null;
+        for(const ap of (a.active_period||[])){ if(num(ap.start)===ns){ en=num(ap.end)||null; break; } }
+        const mtype=((a["transit_realtime.mercury_alert"])||{}).alert_type||"";
+        const lines=[];
+        for(const ie of (a.informed_entity||[])){
+          if(ie.route_id&&!ie.stop_id&&lines.indexOf(ie.route_id)<0) lines.push(ie.route_id);
+        }
+        if(lines.length){
+          const ht=((a.header_text||{}).translation||[]).find(t=>t.language==="en");
+          const dt=((a.description_text||{}).translation||[]).find(t=>t.language==="en");
+          plannedRaw.push({lines:lines,title:ht?ht.text:"Service change",desc:dt?dt.text:"",
+            start:ns,end:en,cls:SEV_CLASS[mtype]||"blue"});
+        }
+      }
+      continue;
+    }
     items.push(a);
   }
   for(const a of items){
@@ -1075,6 +1106,64 @@ async function renderAltDetail(opt){
   $("updated").textContent=t("updated",{time:fmtHM()});
 }
 
+function nyHour(sec){
+  const h=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",hour:"numeric",hour12:false}).format(new Date(sec*1000));
+  return parseInt(h,10)%24;
+}
+function fmtPlannedWhen(start, end){
+  const dayFmt=new Intl.DateTimeFormat("en-US",{timeZone:"America/New_York",weekday:"short",month:"numeric",day:"numeric"});
+  const nowD=new Date(), sD=new Date(start*1000);
+  const tomD=new Date(nowD.getTime()+86400000);
+  let day;
+  if(dayFmt.format(sD)===dayFmt.format(nowD)) day=t("today");
+  else if(dayFmt.format(sD)===dayFmt.format(tomD)) day=t("tomorrow");
+  else day=dayFmt.format(sD);
+  let when=day+", "+fmtClock(start);
+  if(end) when+=" – "+fmtClock(end);
+  return when;
+}
+function renderPlanned(){
+  const box=$("planned");
+  box.innerHTML=""; box.style.display="none";
+  const legs=getLegs();
+  if(!legs.length||!plannedRaw.length) return;
+  const myLines=new Set(legs.map(l=>l.line));
+  const seen=new Set(), items=[];
+  const sorted=plannedRaw.slice().sort((a,b)=>a.start-b.start);
+  for(const p of sorted){
+    if(!p.lines.some(l=>myLines.has(l))) continue;
+    // skip deep-overnight-only work (12am-5am): not relevant to commute hours
+    if(p.end){
+      const sh=nyHour(p.start), eh=nyHour(p.end);
+      if(sh<5&&eh<=5&&(p.end-p.start)<12*3600) continue;
+    }
+    const key=p.lines.slice().sort().join(",")+"|"+p.title;
+    if(seen.has(key)) continue;
+    seen.add(key);
+    items.push(p);
+    if(items.length>=3) break;
+  }
+  if(!items.length) return;
+  let h='<div class="planned"><div class="planned-head">⚠️ '+esc(t("planned_work"))+'</div>';
+  items.forEach((p,idx)=>{
+    const badges=p.lines.filter(l=>myLines.has(l)).map(l=>lineBadge(l)).join("");
+    h+='<div class="planned-item" data-pi="'+idx+'">'
+      +'<div>'+badges+'</div>'
+      +'<div class="planned-title">'+esc(p.title)+'</div>'
+      +'<div class="planned-when">'+esc(fmtPlannedWhen(p.start,p.end))+'</div>'
+      +(p.desc?'<div class="planned-desc">'+esc(p.desc)+'</div>':"")
+      +'</div>';
+  });
+  h+='</div>';
+  box.innerHTML=h;
+  box.style.display="block";
+  box.querySelectorAll(".planned-item").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const d=el.querySelector(".planned-desc");
+      if(d) d.style.display=d.style.display==="block"?"none":"block";
+    });
+  });
+}
 /* ===== main load ===== */
 let loading=false;
 async function loadAll(){
@@ -1087,6 +1176,7 @@ async function loadAll(){
   try{
     const o=originInfo();
     await fetchStatus().catch(()=>{});
+    renderPlanned();
     const wx=await fetchWeather(o.lat,o.lon).catch(()=>null);
     if(wx) renderWeather(wx);
     if(viewingAlt){

@@ -26,8 +26,6 @@ body{margin:0; background:var(--bg); color:var(--text);
   width:40px; height:40px; font-size:21px; cursor:pointer; color:var(--blue);
   display:flex; align-items:center; justify-content:center;}
 .icon-btn:active{background:var(--press); transform:scale(.92);}
-.icon-btn.spin{animation:spin .9s linear;}
-@keyframes spin{to{transform:rotate(360deg);}}
 /* iOS grouped cards */
 .tier{background:var(--card); border:none; border-radius:20px; padding:16px; margin-bottom:14px;
   box-shadow:0 1px 4px rgba(0,0,0,.06);}
@@ -137,8 +135,7 @@ button{font:inherit;}
 <div id="app">
   <div class="topbar">
     <div class="app-title">StandClear</div>
-    <button class="icon-btn" id="refresh-btn" aria-label="Refresh">&#8635;</button>
-    <button class="icon-btn" id="settings-btn" aria-label="Settings">&#9881;</button>
+    <button class="icon-btn" id="settings-btn" aria-label="Settings">&#9776;</button>
   </div>
   <div id="err" class="err" style="display:none"></div>
 
@@ -1479,7 +1476,7 @@ function initSettings(){
 }
 
 /* ===== init ===== */
-$("refresh-btn").onclick=()=>{ const b=$("refresh-btn"); b.classList.remove("spin"); void b.offsetWidth; b.classList.add("spin"); loadAll(); };
+setInterval(()=>{ if(!document.hidden) loadAll(); }, 30000);
 document.querySelectorAll("#dir-toggle .seg-btn").forEach(b=>{
   b.onclick=()=>{
     if(S.direction!==b.dataset.dir){
@@ -1496,7 +1493,6 @@ initSettings();
   S.direction = h<12 ? "commute" : "homebound";
 })();
 loadAll();
-setInterval(loadAll, 60000);
 
 </script>
 </body>

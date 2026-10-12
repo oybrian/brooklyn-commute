@@ -676,7 +676,7 @@ async function computeRoute(legs, startAfter){
   for(const leg of legs){
     const feed=feeds[FEED_FOR[leg.line]];
     let trips=feed?findTrips(feed,leg.line,leg.from,leg.to,after,strict):[];
-    const ts=trips.slice(0,3);
+    const ts=trips.slice(0,5);
     const t=ts.length?ts[0]:null;
     out.push({leg:leg, trip:t, trips:ts, feedOk:!!feed});
     if(t&&t.at){ after=t.at; strict=true; }
@@ -857,7 +857,7 @@ function renderRoute(legResults, walkMin){
     const nowSec=Date.now()/1000;
     let target=null, missed=null;
     for(const tr of allTrips){
-      if(tr.bt-mins*60>nowSec){ target=tr; break; }
+      if(tr.bt-mins*60>=nowSec){ target=tr; break; }
       missed=tr;
     }
     if(target){

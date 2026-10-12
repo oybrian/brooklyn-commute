@@ -970,7 +970,7 @@ function renderLegs(legResults, box){
       td.className="leg transfer";
       let th='<div class="leg-head">'+lineBadge(leg.line)+'<span class="dot '+dotCls(st.cls)+'" title="'+esc(sevLabel(st.cls))+'"></span><span>'+esc(t("transfer_at",{station:stationName(prev.leg.to)}))+'</span></div>';
       if(t1&&t1.at){
-        th+='<div class="leg-time">'+t("your_arrives",{line:esc(prev.leg.line),time:fmtClock(t1.at)})+'</div>';
+        th+='<div class="leg-time">'+esc(prev.leg.line)+' arrives at <b>'+fmtClock(t1.at)+'</b></div>';
         if(t2){
           const wait=Math.max(0,Math.round((t2.bt-t1.at)/60));
           th+='<div class="leg-time">'+esc(leg.line)+' leaves at <b>'+fmtClock(t2.bt)+'</b></div>';
@@ -993,7 +993,7 @@ function renderLegs(legResults, box){
       fd.className="leg";
       let fh;
       if(trip&&trip.at){
-        fh='<div class="leg-head">Arrive '+esc(stationName(leg.to))+' at '+fmtClock(trip.at)+'</div>';
+        fh='<div class="leg-head">📍 '+esc(stationName(leg.to))+' at '+fmtClock(trip.at)+'</div>';
       }else{
         fh='<div class="leg-head">'+esc(t("arrive",{station:stationName(leg.to)}))+'</div>'
           +'<div class="leg-sub">'+esc(t("arr_unavailable"))+'</div>';

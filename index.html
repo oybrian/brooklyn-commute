@@ -1034,7 +1034,7 @@ function renderRoute(legResults, walkMin, arrWalkMin){
   if(lastTrip&&lastTrip.at&&arrWalkMin!=null){
     const av=document.createElement("div");
     av.className="leave-line";
-    av.innerHTML=(S.direction==="commute"?"🏢":"🏠")+" "+fmtClock(lastTrip.at+arrWalkMin*60);
+    av.innerHTML=(S.direction==="commute"?"🏢":"🏠")+" Arrive by <b>"+fmtClock(lastTrip.at+arrWalkMin*60)+"</b>";
     box.appendChild(av);
   }
 }

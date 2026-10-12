@@ -58,7 +58,7 @@ body{margin:0; background:var(--bg); color:var(--text);
 .leg-sub{color:var(--muted); font-size:13px; margin-top:5px;}
 .leg-time{font-size:15px; margin-top:8px; font-variant-numeric:tabular-nums;}
 .leg-time b{font-size:22px; font-weight:700; letter-spacing:-.01em; font-variant-numeric:tabular-nums;}
-.transfer{background:var(--bg); border:1.5px dashed #c7c7cc;}
+.transfer{background:var(--bg);}
 .alert-text{font-size:13px; color:var(--muted); margin-top:8px; line-height:1.5;}
 .status-line{display:flex; align-items:center; font-size:14px; font-weight:600; margin-top:8px;}
 button{font:inherit;}
@@ -594,8 +594,7 @@ function renderLegs(legResults, box){
       const t1=r.trip, t2=legResults[i+1].trip;
       const l2=legResults[i+1].leg;
       const td=document.createElement("div");
-      td.className="leg";
-      td.style.borderStyle="dashed";
+      td.className="leg transfer";
       let th='<div class="leg-head">'+lineBadge(l2.line)+'<span>Transfer at '+esc(stationName(leg.to))+'</span></div>';
       if(t1&&t1.at){
         th+='<div class="leg-time">Your '+esc(leg.line)+' arrives at <b>'+fmtClock(t1.at)+'</b>.</div>';

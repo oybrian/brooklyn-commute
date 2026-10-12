@@ -116,9 +116,9 @@ button{font:inherit;}
       <button class="btn" id="sheet-close">Done</button>
     </div>
     <div class="f-label">Home address</div>
-    <input class="f-input" id="set-home" placeholder="e.g. 123 Main St, Brooklyn NY 11238">
+    <input class="f-input" id="set-home" placeholder="e.g. 595 Dean St, Brooklyn NY 11238">
     <div class="f-label">Work address</div>
-    <input class="f-input" id="set-work" placeholder="e.g. 456 Broadway, Brooklyn NY 11206">
+    <input class="f-input" id="set-work" placeholder="e.g. 7 Bushwick Pl, Brooklyn NY 11206">
     <div class="f-label">Boarding station</div>
     <div class="picker" id="pk1"></div>
     <div class="f-label">Transfer: get off</div>
@@ -313,7 +313,10 @@ async function ensureProto(){
   if(FeedMessage) return;
   if(typeof protobuf==="undefined") throw new Error("protobuf library failed to load");
   const bin=atob(PROTO_B64);
-  const root=protobuf.parse(bin).root;
+  // keepCase:true keeps proto field names as snake_case (trip_update, route_id,
+  // stop_time_update, stop_id). Without it protobufjs converts them to camelCase
+  // and the arrival lookup below silently finds nothing.
+  const root=protobuf.parse(bin, {keepCase:true}).root;
   FeedMessage=root.lookupType("transit_realtime.FeedMessage");
 }
 async function fetchFeed(feedPath){
@@ -370,13 +373,17 @@ function originInfo(){
   return S.direction==="commute" ? S.home : S.work;
 }
 
-async function computeRoute(){
-  const legs=getLegs();
-  const need=[...new Set(legs.map(l=>FEED_FOR[l.line]).filter(Boolean))];
+async function fetchFeeds(lines){
+  const need=[...new Set(lines.map(l=>FEED_FOR[l]).filter(Boolean))];
   const feeds={};
   await Promise.all(need.map(async f=>{
     try{ feeds[f]=await fetchFeed(f); }catch(e){ feeds[f]=null; }
   }));
+  return feeds;
+}
+
+async function computeRoute(legs){
+  const feeds=await fetchFeeds(legs.map(l=>l.line));
   const now=Math.floor(Date.now()/1000);
   const out=[];
   let after=now-60, strict=false;
@@ -408,7 +415,7 @@ function findAlternatives(legResults){
   }
   cands.sort((a,b)=>a.d-b.d);
   return cands.slice(0,2).map(c=>({
-    name:c.s.name, lines:c.lines.slice(0,3),
+    stationId:c.s.id, name:c.s.name, lines:c.lines.slice(0,3),
     walkMin:Math.max(1,Math.round(c.d/4.5*60))
   }));
 }
@@ -425,20 +432,7 @@ function renderWeather(w){
     $("wx-temp").textContent="—";
   }
 }
-function renderRoute(legResults, walkMin){
-  const box=$("legs");
-  box.innerHTML="";
-  const toggle=$("dir-toggle");
-  toggle.innerHTML = S.direction==="commute" ? "To Work &#8646;" : "To Home &#8646;";
-  const o=originInfo();
-  const firstSt=stationName(legResults[0].leg.from);
-  const w=document.createElement("div");
-  w.className="leg-sub";
-  w.style.margin="8px 0";
-  w.textContent = walkMin==null ? "Walk to "+firstSt+": —"
-    : "Walk ~"+Math.round(walkMin)+" min from "+(S.direction==="commute"?"home":"work")+" to "+firstSt;
-  box.appendChild(w);
-
+function renderLegs(legResults, box){
   legResults.forEach((r,i)=>{
     const leg=r.leg, st=statusOf(leg.line);
     const d=document.createElement("div");
@@ -497,6 +491,19 @@ function renderRoute(legResults, walkMin){
     box.appendChild(n);
   }
 }
+function renderRoute(legResults, walkMin){
+  const box=$("legs");
+  box.innerHTML="";
+  const o=originInfo();
+  const firstSt=stationName(legResults[0].leg.from);
+  const w=document.createElement("div");
+  w.className="leg-sub";
+  w.style.margin="8px 0";
+  w.textContent = walkMin==null ? "Walk to "+firstSt+": —"
+    : "Walk ~"+Math.round(walkMin)+" min from "+(S.direction==="commute"?"home":"work")+" to "+firstSt;
+  box.appendChild(w);
+  renderLegs(legResults, box);
+}
 function renderAlts(alts, legResults){
   const box=$("alts");
   box.innerHTML="";
@@ -514,10 +521,98 @@ function renderAlts(alts, legResults){
   alts.forEach(a=>{
     const d=document.createElement("div");
     d.className="alt";
+    d.style.cursor="pointer";
     d.innerHTML="<b>Walk ~"+a.walkMin+" min</b> to "+a.lines.map(lineBadge).join("")+esc(a.name)+
-      '<div class="leg-sub">Suggestion based on nearby stations — check live departures before you go.</div>';
+      '<div class="leg-sub">Tap for full timing: departures, transfer &amp; arrival.</div>';
+    d.onclick=()=>{ viewingAlt={stationId:a.stationId, lines:a.lines, line:a.lines[0]}; loadAll(); };
     box.appendChild(d);
   });
+}
+
+/* ===== alternative detail (tap an alternative for full timing) ===== */
+let viewingAlt=null; // {stationId, lines, line}
+function destStation(){ return S.direction==="commute" ? S.s4.stationId : S.s1.stationId; }
+function rejoinLeg(){
+  return S.direction==="commute"
+    ? {line:S.s3.line, from:S.s3.stationId, to:S.s4.stationId}
+    : {line:S.s1.line, from:S.s2.stationId, to:S.s1.stationId};
+}
+function rejoinStation(){ return S.direction==="commute" ? S.s3.stationId : S.s2.stationId; }
+
+async function nextDepartures(feed, line, stationId, after, n){
+  const from=stopSet(stationId);
+  const out=[];
+  for(const e of (feed.entity||[])){
+    const tu=e.trip_update;
+    if(!tu||!tu.trip) continue;
+    if((tu.trip.route_id||"")!==line) continue;
+    for(const stu of (tu.stop_time_update||[])){
+      const raw=stu.stop_id||"";
+      if(from.has(raw)||from.has(raw.replace(/[NS]$/,""))){
+        const bt=num(stu.arrival&&stu.arrival.time)||num(stu.departure&&stu.departure.time);
+        if(bt&&bt>=after-120) out.push({bt:bt, headsign:tu.trip.trip_headsign||""});
+        break;
+      }
+    }
+  }
+  out.sort((a,b)=>a.bt-b.bt);
+  return out.slice(0, n||5);
+}
+
+async function renderAltDetail(alt){
+  const box=$("legs");
+  box.innerHTML="";
+  const back=document.createElement("button");
+  back.className="btn";
+  back.style.marginBottom="8px";
+  back.textContent="← Back to my route";
+  back.onclick=()=>{ viewingAlt=null; loadAll(); };
+  box.appendChild(back);
+  const h=document.createElement("div");
+  h.className="leg-head";
+  h.style.marginBottom="4px";
+  h.innerHTML="Alternative via "+alt.lines.map(lineBadge).join("")+"<span>"+esc(stationName(alt.stationId))+"</span>";
+  box.appendChild(h);
+
+  const o=originInfo();
+  const st=ST_BY_ID[alt.stationId];
+  let walkMin=null;
+  try{ if(st) walkMin=await walkMinutes(o.lat,o.lon,st.lat,st.lon); }catch(e){}
+  const w=document.createElement("div");
+  w.className="leg-sub";
+  w.style.margin="8px 0";
+  if(walkMin!=null) w.textContent="Walk ~"+Math.round(walkMin)+" min from "+(S.direction==="commute"?"home":"work")+" to "+st.name;
+  box.appendChild(w);
+
+  const line=alt.line||alt.lines[0];
+  const dest=destStation();
+  // candidate 1: direct ride to destination on the alt line
+  let res=await computeRoute([{line:line, from:alt.stationId, to:dest}]);
+  if(!(res[0]&&res[0].trip)){
+    // candidate 2: ride to the rejoin point, then continue the original second leg
+    res=await computeRoute([{line:line, from:alt.stationId, to:rejoinStation()}, rejoinLeg()]);
+  }
+  if(res[0]&&res[0].trip){
+    renderLegs(res, box);
+  }else{
+    // departures-only fallback: still shows which station and minutes until trains
+    const feeds=await fetchFeeds([line]);
+    const feed=feeds[FEED_FOR[line]];
+    const now=Math.floor(Date.now()/1000);
+    const deps=feed?await nextDepartures(feed,line,alt.stationId,now,5):[];
+    const d=document.createElement("div");
+    d.className="leg";
+    if(deps.length){
+      d.innerHTML='<div class="leg-head">'+lineBadge(line)+'<span>Next trains at '+esc(st.name)+'</span></div>'+
+        deps.map(x=>'<div class="leg-time">in <b>'+countdown(x.bt)+'</b> <span class="leg-sub">('+fmtClock(x.bt)+')</span>'+(x.headsign?' <span class="leg-sub">'+esc(x.headsign)+'</span>':'')+'</div>').join("")+
+        '<div class="leg-sub" style="margin-top:6px">No through-route to your destination on this line right now.</div>';
+    }else{
+      d.innerHTML='<div class="leg-sub">No live departures found for the '+esc(line)+' line right now.</div>';
+    }
+    box.appendChild(d);
+  }
+  $("alts").innerHTML='<div class="leg-sub">Showing alternative detail. Tap "← Back to my route" to return.</div>';
+  $("updated").textContent="Updated "+fmtHM()+" ET";
 }
 
 /* ===== main load ===== */
@@ -526,21 +621,25 @@ async function loadAll(){
   if(loading) return;
   loading=true;
   showErr("");
+  $("dir-toggle").innerHTML = S.direction==="commute" ? "To Work &#8646;" : "To Home &#8646;";
   try{
     const o=originInfo();
-    const [wx, legResults] = await Promise.all([
-      fetchWeather(o.lat,o.lon).catch(()=>null),
-      (async()=>{ await fetchStatus().catch(()=>{}); return await computeRoute(); })()
-    ]);
-    let walkMin=null;
-    try{
-      const bs=ST_BY_ID[legResults[0].leg.from];
-      if(bs) walkMin=await walkMinutes(o.lat,o.lon,bs.lat,bs.lon);
-    }catch(e){}
+    await fetchStatus().catch(()=>{});
+    const wx=await fetchWeather(o.lat,o.lon).catch(()=>null);
     if(wx) renderWeather(wx);
-    renderRoute(legResults, walkMin);
-    renderAlts(findAlternatives(legResults), legResults);
-    $("updated").textContent="Updated "+fmtHM()+" ET";
+    if(viewingAlt){
+      await renderAltDetail(viewingAlt);
+    }else{
+      const legResults=await computeRoute(getLegs());
+      let walkMin=null;
+      try{
+        const bs=ST_BY_ID[legResults[0].leg.from];
+        if(bs) walkMin=await walkMinutes(o.lat,o.lon,bs.lat,bs.lon);
+      }catch(e){}
+      renderRoute(legResults, walkMin);
+      renderAlts(findAlternatives(legResults), legResults);
+      $("updated").textContent="Updated "+fmtHM()+" ET";
+    }
   }catch(e){
     showErr("Couldn't load live data. Check your connection and tap Refresh. ("+String(e.message||e).slice(0,80)+")");
   }

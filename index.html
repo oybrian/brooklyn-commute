@@ -855,7 +855,7 @@ function renderLegs(legResults, box){
     box.appendChild(n);
   }
 }
-function renderRoute(legResults, walkMin){
+function renderRoute(legResults, walkMin, missedTrain){
   const box=$("legs");
   box.innerHTML="";
   const firstSt=stationName(legResults[0].leg.from);
@@ -870,10 +870,10 @@ function renderRoute(legResults, walkMin){
     const line=legResults[0].leg.line;
     const allTrips=legResults[0].trips||(legResults[0].trip?[legResults[0].trip]:[]);
     const nowSec=Date.now()/1000;
-    let target=null, missed=null;
+    let target=null, missed=missedTrain||null;
     for(const tr of allTrips){
       if(tr.bt-mins*60>=nowSec){ target=tr; break; }
-      missed=tr;
+      if(!missedTrain) missed=tr;
     }
     if(target){
       const leaveBy=target.bt-mins*60;
@@ -1020,7 +1020,7 @@ async function loadAll(){
         $("legs").innerHTML='<div class="leg-sub">'+esc(t("no_route"))+'</div>';
         renderAlts([], []);
       }else{
-        const legResults=await computeRoute(legs);
+        let legResults=await computeRoute(legs);
         let walkMin=S.direction==="commute"?S.walkCommute:S.walkHomebound;
         if(walkMin==null){
           try{
@@ -1028,7 +1028,25 @@ async function loadAll(){
             if(bs) walkMin=await walkMinutes(o.lat,o.lon,bs.lat,bs.lon);
           }catch(e){}
         }
-        renderRoute(legResults, walkMin);
+        // If the very next train is uncatchable on foot, re-anchor the whole
+        // route on the first catchable train so every card shows a train the
+        // user can actually board. Feeds are cached, so this is not a refetch.
+        let missedTrain=null;
+        if(walkMin!=null){
+          const nowSec=Date.now()/1000;
+          const trips=legResults[0].trips||[];
+          let target=null;
+          for(const tr of trips){
+            if(tr.bt-walkMin*60>=nowSec){ target=tr; break; }
+            missedTrain=tr;
+          }
+          if(target&&missedTrain){
+            legResults=await computeRoute(legs, Math.floor(nowSec+walkMin*60));
+          }else{
+            missedTrain=null;
+          }
+        }
+        renderRoute(legResults, walkMin, missedTrain);
         const alts=hasDisruption(legResults)?await findFastRoutes(legResults):[];
         renderAlts(alts, legResults);
       }

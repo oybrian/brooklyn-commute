@@ -951,8 +951,8 @@ function renderLegs(legResults, box){
       d.className="leg";
       let html='<div class="leg-head">'+lineBadge(leg.line)+'<span class="dot '+dotCls(st.cls)+'" title="'+esc(sevLabel(st.cls))+'"></span><span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span></div>';
       if(r.trip){
-        const _m=Math.max(0,Math.round((r.trip.bt-nowSec())/60));
-        html+='<div class="leg-time">'+(_m<=0?'<b>'+esc(leg.line)+' boarding now</b>':'Next '+esc(leg.line)+' leave at <b>'+fmtClock(r.trip.bt)+'</b> <span class="leg-sub">(in '+_m+'min)</span>')+'</div>';
+        const _m=Math.max(0,Math.round((r.trip.bt-Date.now()/1000)/60));
+        html+='<div class="leg-time">'+(_m<=0?'<b>'+esc(leg.line)+' boarding now</b>':esc(leg.line)+' leaves at <b>'+fmtClock(r.trip.bt)+'</b> <span class="leg-sub">(in '+_m+'min)</span>')+'</div>';
       }else if(!r.feedOk){
         html+='<div class="leg-sub">'+esc(t("no_feed",{line:leg.line}))+'</div>';
       }else{

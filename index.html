@@ -1130,7 +1130,8 @@ function renderRoute(legResults, walkMin, arrWalkMin){
       const leaveBy=target.bt-mins*60;
       const lv=document.createElement("div");
       lv.className="leave-line";
-      lv.innerHTML="🚶 Leave by <b>"+fmtClock(leaveBy)+"</b>";
+      const walkEmoji=S.direction==="commute"?"\uD83D\uDEB6":"\uD83D\uDD7A";
+      lv.innerHTML=walkEmoji+" Leave by <b>"+fmtClock(leaveBy)+"</b>";
       box.appendChild(lv);
     }
   }

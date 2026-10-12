@@ -50,8 +50,8 @@ body{margin:0; background:var(--bg); color:var(--text);
 
 /* iOS segmented control */
 .seg{display:flex; background:var(--seg); border-radius:12px; padding:2px; margin-bottom:12px;}
-.seg-btn{flex:1; border:none; background:transparent; border-radius:10px; padding:8px 0;
-  font-size:14px; font-weight:500; color:var(--text); cursor:pointer;}
+.seg-btn{flex:1; border:none; background:transparent; border-radius:10px; padding:6px 0;
+  font-size:13px; font-weight:500; color:var(--text); cursor:pointer;}
 .seg-btn.sel{background:#fff; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.12);}
 /* line badges */
 .badge{display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px;
@@ -62,9 +62,9 @@ body{margin:0; background:var(--bg); color:var(--text);
 .dot.red{background:var(--red);} .dot.blue{background:var(--blue);} .dot.gray{background:#c7c7cc;}
 /* route legs */
 .leg{border:none; border-radius:16px; padding:13px 14px; margin:10px 0; background:var(--bg);}
-.leg-head{display:flex; align-items:center; font-weight:700; font-size:16px; letter-spacing:-.01em;}
+.leg-head{display:flex; align-items:center; font-weight:700; font-size:17px; letter-spacing:-.01em;}
 .leg-sub{color:var(--muted); font-size:13px; margin-top:5px;}
-.leg-time{font-size:15px; margin-top:8px; font-variant-numeric:tabular-nums;}
+.leg-time{font-size:17px; margin-top:8px; font-variant-numeric:tabular-nums;}
 .leg-head .chev{margin-left:auto; color:#8E8E93; font-size:18px; font-weight:400;}
 .tt{margin-top:8px; padding-top:4px; border-top:1px solid rgba(0,0,0,0.08);}
 .tt-row{display:flex; justify-content:space-between; align-items:center; padding:4px 0; font-size:14px; font-variant-numeric:tabular-nums;}
@@ -78,7 +78,7 @@ body{margin:0; background:var(--bg); color:var(--text);
 .planned-title{font-size:14px; margin-top:4px; line-height:1.35;}
 .planned-when{color:#8E8E93; font-size:13px; margin-top:2px;}
 .planned-desc{font-size:13px; color:#3A3A3C; margin-top:6px; line-height:1.4; display:none;}
-.leg-time b{font-size:22px; font-weight:700; letter-spacing:-.01em; font-variant-numeric:tabular-nums;}
+.leg-time b{font-size:24px; font-weight:700; letter-spacing:-.01em; font-variant-numeric:tabular-nums;}
 .transfer{background:var(--bg);}
 .alert-text{font-size:13px; color:var(--muted); margin-top:8px; line-height:1.5;}
 .status-line{display:flex; align-items:center; font-size:14px; font-weight:600; margin-top:8px;}
@@ -977,7 +977,8 @@ function renderLegs(legResults, box, arrWalkMin){
         th+='<div class="leg-time">'+t("your_arrives",{line:esc(prev.leg.line),time:fmtClock(t1.at)})+'</div>';
         if(t2){
           const wait=Math.max(0,Math.round((t2.bt-t1.at)/60));
-          th+='<div class="leg-time">'+nxHtml(leg.line,t2.bt)+' <span class="leg-sub">('+fmtClock(t2.bt)+')</span> &mdash; '+(wait>0?t("transfer_wait",{n:wait}):t("transfer_now"))+'.</div>';
+          th+='<div class="leg-time">'+nxHtml(leg.line,t2.bt)+' <span class="leg-sub">('+fmtClock(t2.bt)+')</span></div>';
+          th+='<div class="leg-sub">'+(wait>0?t("transfer_wait",{n:wait}):t("transfer_now"))+'.</div>';
         }else{
           th+='<div class="leg-sub">'+esc(t("waiting_conn",{line:leg.line}))+'</div>';
         }
@@ -1018,15 +1019,8 @@ function renderLegs(legResults, box, arrWalkMin){
 function renderRoute(legResults, walkMin, arrWalkMin){
   const box=$("legs");
   box.innerHTML="";
-  const firstSt=stationName(legResults[0].leg.from);
-  const w=document.createElement("div");
-  w.className="leg-sub";
-  w.style.margin="8px 0";
-  if(walkMin==null){
-    w.textContent=t("add_addr",{place:t(S.direction==="commute"?"home":"work")});
-  }else{
+  if(walkMin!=null){
     const mins=Math.round(walkMin);
-    w.textContent=t("walk_to",{min:mins,place:t(S.direction==="commute"?"home":"work"),station:firstSt});
     const line=legResults[0].leg.line;
     const allTrips=legResults[0].trips||(legResults[0].trip?[legResults[0].trip]:[]);
     const nowSec=Date.now()/1000;
@@ -1039,13 +1033,9 @@ function renderRoute(legResults, walkMin, arrWalkMin){
       const lv=document.createElement("div");
       lv.className="leave-line";
       lv.innerHTML="🚶 "+t("leave_by",{time:fmtClock(leaveBy),line:esc(line),traintime:fmtClock(target.bt)});
-      box.appendChild(w);
       box.appendChild(lv);
-      renderLegs(legResults, box, arrWalkMin);
-      return;
     }
   }
-  box.appendChild(w);
   renderLegs(legResults, box, arrWalkMin);
 }
 function renderAlts(options, legResults){

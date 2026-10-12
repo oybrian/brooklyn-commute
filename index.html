@@ -96,7 +96,7 @@ button{font:inherit;}
 #sheet{position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; z-index:50;
   align-items:flex-end; justify-content:center;}
 #sheet.open{display:flex;}
-#sheet-card{background:var(--bg); width:100%; max-width:520px; max-height:92vh; overflow-y:auto;
+#sheet-card{background:var(--bg); width:100%; max-width:520px; max-height:92vh; overflow-y:auto; -webkit-overflow-scrolling:touch;
   border-radius:20px 20px 0 0; padding:18px 18px 34px;}
 #sheet-card h2{margin:0 0 4px; font-size:22px; font-weight:700; letter-spacing:-.02em;}
 .f-label{font-size:13px; color:var(--muted); margin:16px 0 6px; font-weight:600; text-transform:uppercase; letter-spacing:.04em;}
@@ -1447,7 +1447,7 @@ function initSettings(){
     saveSettings(); renderLegEditors();
   };
   $("sheet-close").onclick=()=>{ $("sheet").classList.remove("open"); loadAll(); };
-  $("settings-btn").onclick=()=>{ const c=$("sheet-card"); if(c) c.scrollTop=0; $("sheet").classList.add("open"); };
+  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); const c=$("sheet-card"); if(c){ c.scrollTop=0; requestAnimationFrame(()=>{ c.scrollTop=0; }); } };
   $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")){ $("sheet").classList.remove("open"); loadAll(); } });
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();

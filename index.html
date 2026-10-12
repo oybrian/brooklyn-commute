@@ -719,6 +719,16 @@ for(let i=0;i<STATIONS.length;i++){
     if(d<=0.6) XFER_PAIRS.push({a:a, b:c, d:d});
   }
 }
+// Index: line -> transfer pairs involving that line
+const LINE_XFER_IDX={};
+XFER_PAIRS.forEach(xp=>{
+  const add=(s,other)=>{
+    (s.lines||[]).forEach(l=>{
+      (LINE_XFER_IDX[l]=LINE_XFER_IDX[l]||[]).push({from:s, to:other, d:xp.d});
+    });
+  };
+  add(xp.a, xp.b); add(xp.b, xp.a);
+});
 
 function autoLegs(){
   const h=S.home, w=S.work;
@@ -758,6 +768,37 @@ function autoLegs(){
             consider(hn.d*WALK + d1*RIDE + xp.d*WALK + XFER_PEN + d2*RIDE + wn.d*WALK,
               [{line:lh, from:H.id, to:s1.id, kind:"ride", auto:true},
                {line:lw, from:s2.id, to:W.id, kind:"ride", auto:true}]);
+          }
+        }
+      }
+      // 2 transfers: H (lh1) -> s1 -> s2 (lm) -> s3 -> s4 -> W (lw2)
+      for(const lh1 of (H.lines||[])){
+        for(const lw2 of (W.lines||[])){
+          if(lh1===lw2) continue;
+          const p1cands=LINE_XFER_IDX[lh1]||[];
+          const midLines=[...new Set(p1cands.flatMap(x=>x.to.lines||[]))]
+            .filter(lm=>lm!==lh1&&lm!==lw2);
+          for(const lm of midLines){
+            const p1list=p1cands.filter(x=>(x.to.lines||[]).includes(lm))
+              .sort((a,b2)=>havKm(H.lat,H.lon,a.from.lat,a.from.lon)-havKm(H.lat,H.lon,b2.from.lat,b2.from.lon))
+              .slice(0,5);
+            const p2list=(LINE_XFER_IDX[lm]||[]).filter(x=>(x.to.lines||[]).includes(lw2))
+              .sort((a,b2)=>havKm(a.to.lat,a.to.lon,W.lat,W.lon)-havKm(b2.to.lat,b2.to.lon,W.lat,W.lon))
+              .slice(0,5);
+            for(const p1 of p1list){
+              for(const p2 of p2list){
+                const s1=p1.from, s2=p1.to, s3=p2.from, s4=p2.to;
+                const d1=havKm(H.lat,H.lon,s1.lat,s1.lon);
+                const dm=havKm(s2.lat,s2.lon,s3.lat,s3.lon);
+                const d2=havKm(s4.lat,s4.lon,W.lat,W.lon);
+                const direct=havKm(H.lat,H.lon,W.lat,W.lon);
+                if(d1+dm+d2>direct*3+3) continue;
+                consider(hn.d*WALK + d1*RIDE + p1.d*WALK + XFER_PEN + dm*RIDE + p2.d*WALK + XFER_PEN + d2*RIDE + wn.d*WALK,
+                  [{line:lh1, from:H.id, to:s1.id, kind:"ride", auto:true},
+                   {line:lm, from:s2.id, to:s3.id, kind:"ride", auto:true},
+                   {line:lw2, from:s4.id, to:W.id, kind:"ride", auto:true}]);
+              }
+            }
           }
         }
       }

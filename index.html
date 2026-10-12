@@ -1446,9 +1446,9 @@ function initSettings(){
     S.legs.push({line:"", from:"", to:""});
     saveSettings(); renderLegEditors();
   };
-  $("sheet-close").onclick=()=>$("sheet").classList.remove("open");
+  $("sheet-close").onclick=()=>{ $("sheet").classList.remove("open"); loadAll(); };
   $("settings-btn").onclick=()=>{ const c=$("sheet-card"); if(c) c.scrollTop=0; $("sheet").classList.add("open"); };
-  $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").classList.remove("open"); });
+  $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")){ $("sheet").classList.remove("open"); loadAll(); } });
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();
     const btn=$("set-save");
@@ -1476,7 +1476,7 @@ function initSettings(){
 }
 
 /* ===== init ===== */
-setInterval(()=>{ if(!document.hidden) loadAll(); }, 30000);
+setInterval(()=>{ if(!document.hidden && !$("sheet").classList.contains("open")) loadAll(); }, 30000);
 document.querySelectorAll("#dir-toggle .seg-btn").forEach(b=>{
   b.onclick=()=>{
     if(S.direction!==b.dataset.dir){

@@ -1321,6 +1321,39 @@ function makePicker(el, leg, which, showChips){
   renderPicked();
   return { refresh: renderPicked };
 }
+function fmtAddr(a){
+  const ad=a.address||{};
+  const num=String(ad.house_number||"").trim();
+  const road=String(ad.road||ad.pedestrian||ad.footway||ad.cycleway||"").trim();
+  let line1=(num+" "+road).trim();
+  if(!line1){
+    line1=String(a.display_name||"").split(",").slice(0,2).join(",").trim();
+  }
+  line1=line1.replace(/^(\d+),\s*/,"$1 ");
+  const suburb=String(ad.suburb||ad.neighbourhood||ad.quarter||ad.borough||"").trim();
+  const city=String(ad.city||ad.town||ad.village||ad.municipality||"").trim();
+  let state=String(ad.state||"").trim();
+  const iso=String(ad["ISO3166-2-lvl4"]||"").trim();
+  if(/^US-/i.test(iso)) state=iso.slice(3).toUpperCase();
+  const zip=String(ad.postcode||"").trim();
+  const norm=s=>s.toLowerCase().replace(/[^a-z]/g,"");
+  const cityIsState=(()=>{
+    if(!city||!state) return false;
+    if(norm(city)===norm(state)) return true;
+    if(state.length===2){
+      const initials=city.toLowerCase().replace(/[^a-z ]/g,"").trim().split(/\s+/).map(w=>w[0]||"").join("");
+      return initials===state.toLowerCase();
+    }
+    return false;
+  })();
+  const parts=[];
+  if(suburb) parts.push(suburb);
+  if(city&&norm(city)!==norm(suburb)&&!cityIsState) parts.push(city);
+  const stzip=(state+(zip?" "+zip:"")).trim();
+  if(stzip) parts.push(stzip);
+  const line2=parts.join(", ");
+  return {line1:line1,line2:line2,full:line2?line1+", "+line2:line1};
+}
 function attachAddrAC(inputId, listId){
   const inp=$(inputId), list=document.getElementById(listId);
   let t=null, lastQ="";
@@ -1332,15 +1365,15 @@ function attachAddrAC(inputId, listId){
     t=setTimeout(async()=>{
       if(q===lastQ) return; lastQ=q;
       try{
-        const url="https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&countrycodes=us&viewbox=-74.35,40.45,-73.65,40.95&q="+encodeURIComponent(q);
+        const url="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=us&viewbox=-74.35,40.45,-73.65,40.95&q="+encodeURIComponent(q);
         const r=await fetch(url,{headers:{"Accept":"application/json"}});
         const arr=await r.json();
         list.innerHTML="";
         arr.forEach(a=>{
           const d=document.createElement("div"); d.className="pick-item";
-          const short=String(a.display_name).split(",").slice(0,2).join(",");
-          d.innerHTML="<div><b>"+esc(short)+"</b><br><span class=pick-line>"+esc(a.display_name)+"</span></div>";
-          d.onclick=()=>{inp.value=a.display_name; inp.dataset.lat=a.lat; inp.dataset.lon=a.lon; list.innerHTML="";};
+          const f=fmtAddr(a);
+          d.innerHTML="<div><b>"+esc(f.line1)+"</b>"+(f.line2?"<br><span class=pick-line>"+esc(f.line2)+"</span>":"")+"</div>";
+          d.onclick=()=>{inp.value=f.full; inp.dataset.lat=a.lat; inp.dataset.lon=a.lon; list.innerHTML="";};
           list.appendChild(d);
         });
       }catch(e){}

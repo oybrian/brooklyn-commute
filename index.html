@@ -1160,7 +1160,7 @@ function initSettings(){
     saveSettings(); renderLegEditors();
   };
   $("sheet-close").onclick=()=>$("sheet").classList.remove("open");
-  $("settings-btn").onclick=()=>$("sheet").classList.add("open");
+  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); renderLangChips(); };
   $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").classList.remove("open"); });
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();

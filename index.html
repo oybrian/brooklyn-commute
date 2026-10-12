@@ -249,7 +249,7 @@ to_work:"To Work",to_home:"To Home",your_route:"Your route",alternatives:"Altern
 wind:"Wind",rain:"Rain",home:"home",work:"work",
 walk_to:"Walk ~{min} min from {place} to {station}",
 add_addr:"Add your {place} address in Settings for walk time.",
-no_route:"No route set. Tap the gear icon, add at least one leg (board → get off), then Save.",
+no_route:"No route found. Set home & work addresses (tap \u2630), or add route legs manually.",
 sev_suspended:"Suspended",sev_delays:"Delays",sev_planned:"Planned work",sev_good:"Good service",
 cd_min:"in <b>{n} min</b>",cd_now:"<b>Boarding now</b>",nx_min:"Next {line} in <b>{n} min</b>",nx_now:"<b>{line} boarding now</b>",
 no_trains:"No upcoming {line} trains found for this direction.",
@@ -704,11 +704,76 @@ function findTrips(feed,line,fromId,toId,after,strict){
 }
 
 /* ===== route model ===== */
+// Auto-route: find best subway route when user hasn't specified legs
+// Uses home/work coordinates + station geography. Prefers direct lines,
+// otherwise 1 transfer via precomputed close station pairs.
+const LINE_STATIONS={};
+STATIONS.forEach(s=>{ (s.lines||[]).forEach(l=>{ (LINE_STATIONS[l]=LINE_STATIONS[l]||[]).push(s); }); });
+// Precompute transfer pairs: stations on different lines within 600m
+const XFER_PAIRS=[];
+for(let i=0;i<STATIONS.length;i++){
+  for(let j=i+1;j<STATIONS.length;j++){
+    const a=STATIONS[i], c=STATIONS[j];
+    if(a.lines.some(l=>c.lines.includes(l))) continue;
+    const d=havKm(a.lat,a.lon,c.lat,c.lon);
+    if(d<=0.6) XFER_PAIRS.push({a:a, b:c, d:d});
+  }
+}
+
+function autoLegs(){
+  const h=S.home, w=S.work;
+  if(h.lat==null||h.lon==null||w.lat==null||w.lon==null) return null;
+  const nearH=STATIONS.map(s=>({s:s, d:havKm(h.lat,h.lon,s.lat,s.lon)}))
+    .filter(x=>x.d<=1.2).sort((a,b)=>a.d-b.d);
+  const nearW=STATIONS.map(s=>({s:s, d:havKm(w.lat,w.lon,s.lat,s.lon)}))
+    .filter(x=>x.d<=1.2).sort((a,b)=>a.d-b.d);
+  if(!nearH.length||!nearW.length) return null;
+  const WALK=12, RIDE=2, XFER_PEN=5;
+  let best=null;
+  const consider=(score, legs)=>{ if(!best||score<best.score) best={score:score, legs:legs}; };
+  for(const hn of nearH){
+    for(const wn of nearW){
+      const H=hn.s, W=wn.s;
+      if(H.id===W.id) continue;
+      const shared=(H.lines||[]).filter(l=>(W.lines||[]).includes(l));
+      for(const line of shared){
+        const rideKm=havKm(H.lat,H.lon,W.lat,W.lon);
+        consider(hn.d*WALK + rideKm*RIDE + wn.d*WALK,
+          [{line:line, from:H.id, to:W.id, kind:"ride", auto:true}]);
+      }
+      for(const lh of (H.lines||[])){
+        for(const lw of (W.lines||[])){
+          if(lh===lw) continue;
+          for(const xp of XFER_PAIRS){
+            let s1=null, s2=null;
+            if(xp.a.lines.includes(lh)&&xp.b.lines.includes(lw)){ s1=xp.a; s2=xp.b; }
+            else if(xp.b.lines.includes(lh)&&xp.a.lines.includes(lw)){ s1=xp.b; s2=xp.a; }
+            else continue;
+            const d1=havKm(H.lat,H.lon,s1.lat,s1.lon);
+            const d2=havKm(s2.lat,s2.lon,W.lat,W.lon);
+            const direct=havKm(H.lat,H.lon,W.lat,W.lon);
+            if(d1+d2>direct*2.5+2) continue;
+            // s1 must be different from H unless H is the transfer itself
+            consider(hn.d*WALK + d1*RIDE + xp.d*WALK + XFER_PEN + d2*RIDE + wn.d*WALK,
+              [{line:lh, from:H.id, to:s1.id, kind:"ride", auto:true},
+               {line:lw, from:s2.id, to:W.id, kind:"ride", auto:true}]);
+          }
+        }
+      }
+    }
+  }
+  return best?best.legs:null;
+}
+
 function getLegs(){
-  const legs=(S.legs||[]).filter(l=>l&&l.line&&l.from&&l.to)
+  let legs=(S.legs||[]).filter(l=>l&&l.line&&l.from&&l.to)
     .map(l=>({line:l.line, from:l.from, to:l.to, kind:"ride"}));
+  if(!legs.length){
+    const auto=autoLegs();
+    if(auto) legs=auto;
+  }
   if(S.direction==="homebound")
-    return legs.slice().reverse().map(l=>({line:l.line, from:l.to, to:l.from, kind:"ride"}));
+    return legs.slice().reverse().map(l=>({line:l.line, from:l.to, to:l.from, kind:"ride", auto:l.auto}));
   return legs;
 }
 function originInfo(){
@@ -946,7 +1011,7 @@ function renderLegs(legResults, box){
       // first leg: full card with boarding countdown
       const d=document.createElement("div");
       d.className="leg";
-      let html='<div class="leg-head">'+lineBadge(leg.line)+'<span class="dot '+dotCls(st.cls)+'" title="'+esc(sevLabel(st.cls))+'"></span><span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span></div>';
+      let html='<div class="leg-head">'+lineBadge(leg.line)+'<span class="dot '+dotCls(st.cls)+'" title="'+esc(sevLabel(st.cls))+'"></span><span>'+esc(stationName(leg.from))+' &rarr; '+esc(stationName(leg.to))+'</span>'+(leg.auto?'<span class="leg-sub" style="margin-left:6px">auto</span>':'')+'</div>';
       if(r.trip){
         const _m=Math.max(0,Math.round((r.trip.bt-Date.now()/1000)/60));
         html+='<div class="leg-time">'+(_m<=0?'<b>'+esc(leg.line)+' boarding now</b>':esc(leg.line)+' leaves at <b>'+fmtClock(r.trip.bt)+'</b> <span class="leg-sub">(in '+_m+'min)</span>')+'</div>';

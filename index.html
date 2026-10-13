@@ -26,6 +26,11 @@ body{margin:0; background:var(--bg); color:var(--text);
   width:40px; height:40px; font-size:21px; cursor:pointer; color:var(--blue);
   display:flex; align-items:center; justify-content:center;}
 .icon-btn:active{background:var(--press); transform:scale(.92);}
+@keyframes spin360{to{transform:rotate(360deg);}}
+.icon-btn.spinning{animation:spin360 .7s linear infinite;}
+.mini-btn{transition:transform .1s ease, opacity .1s ease;}
+.mini-btn:active{transform:scale(.93);}
+button{ -webkit-tap-highlight-color:transparent; }
 /* iOS grouped cards */
 .tier{background:var(--card); border:none; border-radius:20px; padding:16px; margin-bottom:14px;
   box-shadow:0 1px 4px rgba(0,0,0,.06);}
@@ -53,6 +58,8 @@ body{margin:0; background:var(--bg); color:var(--text);
 .seg-btn{flex:1; border:none; background:transparent; border-radius:10px; padding:6px 0;
   font-size:13px; font-weight:500; color:var(--text); cursor:pointer;}
 .seg-btn.sel{background:#fff; font-weight:600; box-shadow:0 1px 3px rgba(0,0,0,.12);}
+.seg-btn{transition:transform .1s ease, opacity .1s ease;}
+.seg-btn:active{transform:scale(.94); opacity:.75;}
 /* line badges */
 .badge{display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px;
   border-radius:10px; font-weight:700; font-size:17px; color:#fff; padding:0 9px; margin-right:10px;
@@ -62,7 +69,11 @@ body{margin:0; background:var(--bg); color:var(--text);
 .dot.green{background:var(--green);} .dot.amber{background:var(--amber);}
 .dot.red{background:var(--red);} .dot.blue{background:var(--blue);} .dot.gray{background:#c7c7cc;}
 /* route legs */
-.leg{border:none; border-radius:16px; padding:13px 14px; margin:10px 0; background:var(--bg);}
+.leg{border:none; border-radius:16px; padding:13px 14px; margin:10px 0; background:var(--bg);
+  transition:transform .12s ease, opacity .12s ease;}
+.leg:active{transform:scale(.985); opacity:.82;}
+.leg-head .chev{transition:transform .22s ease; display:inline-block;}
+.leg-head .chev.open{transform:rotate(90deg);}
 .leg-head{display:flex; align-items:center; font-weight:700; font-size:17px; letter-spacing:-.01em;}
 .leg-sub{color:var(--muted); font-size:13px; margin-top:5px;}
 .leg-time{font-size:17px; margin-top:8px; font-variant-numeric:tabular-nums;}
@@ -1010,6 +1021,7 @@ async function loadTtInto(el, leg, dispBt){
     el.innerHTML=tt?ttHtml(dispBt, tt):'<div class="leg-sub">—</div>';
   }catch(e){ el.innerHTML='<div class="leg-sub">—</div>'; }
 }
+function tap(){ try{ if(navigator.vibrate) navigator.vibrate(10); }catch(e){} }
 function toggleTt(key, leg, dispBt, cardEl){
   const el=cardEl.querySelector(".tt");
   if(!el) return;
@@ -1023,7 +1035,7 @@ function toggleTt(key, leg, dispBt, cardEl){
     loadTtInto(el, leg, dispBt);
   }
   const ch=cardEl.querySelector(".chev");
-  if(ch) ch.textContent=expandedLegs.has(key)?"⌄":"›";
+  if(ch) ch.classList.toggle("open", expandedLegs.has(key));
 }
 function makeTappable(cardEl, key, leg, trip){
   if(!trip) return;
@@ -1031,11 +1043,11 @@ function makeTappable(cardEl, key, leg, trip){
   const head=cardEl.querySelector(".leg-head");
   if(head&&!head.querySelector(".chev")){
     const s=document.createElement("span");
-    s.className="chev";
-    s.textContent=expandedLegs.has(key)?"⌄":"›";
+    s.className="chev"+(expandedLegs.has(key)?" open":"");
+    s.textContent="›";
     head.appendChild(s);
   }
-  cardEl.addEventListener("click", ()=>toggleTt(key, leg, trip.bt, cardEl));
+  cardEl.addEventListener("click", ()=>{ tap(); toggleTt(key, leg, trip.bt, cardEl); });
   let ttEl=cardEl.querySelector(".tt");
   if(!ttEl){
     ttEl=document.createElement("div");
@@ -1162,7 +1174,7 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
       +'<button id="unlock-btn" class="mini-btn">Unlock</button>';
     box.appendChild(lv);
     const ub=lv.querySelector("#unlock-btn");
-    if(ub) ub.onclick=(e)=>{ e.stopPropagation(); unlockTrip(); };
+    if(ub) ub.onclick=(e)=>{ e.stopPropagation(); tap(); unlockTrip(); };
   }else if(walkMin!=null){
     const lv=document.createElement("div");
     lv.className="leave-line";
@@ -1175,7 +1187,7 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
         const btn=document.createElement("button");
         btn.className="seg-btn"+(i===departIdx?" sel":"");
         btn.textContent=fmtClock(opt.leaveBy)+" → "+fmtClock(opt.trainBt)+" "+opt.legResults[0].leg.line;
-        btn.onclick=(e)=>{ e.stopPropagation(); selectDepartOption(i, walkMin, arrWalkMin); };
+        btn.onclick=(e)=>{ e.stopPropagation(); tap(); selectDepartOption(i, walkMin, arrWalkMin); };
         seg.appendChild(btn);
       });
     }else{
@@ -1201,7 +1213,7 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
     }
     box.appendChild(lv);
     const db=lv.querySelector("#depart-btn");
-    if(db) db.onclick=(e)=>{ e.stopPropagation(); lockTrip(legResults, walkMin, arrWalkMin); };
+    if(db) db.onclick=(e)=>{ e.stopPropagation(); tap(); lockTrip(legResults, walkMin, arrWalkMin); };
   }
   renderLegs(legResults, box);
   // final home/work arrival as its own line after the last card (like leave-by)
@@ -1670,8 +1682,8 @@ function initSettings(){
     saveSettings(); renderLegEditors();
   };
   $("sheet-close").onclick=()=>{ $("sheet").classList.remove("open"); };
-  $("settings-btn").onclick=()=>{ $("sheet").classList.add("open"); };
-$("refresh-btn").onclick=()=>{ loadAll(); };
+  $("settings-btn").onclick=()=>{ tap(); $("sheet").classList.add("open"); };
+$("refresh-btn").onclick=()=>{ tap(); const rb=$("refresh-btn"); rb.classList.add("spinning"); loadAll().finally(()=>rb.classList.remove("spinning")); };
   $("sheet").addEventListener("click",e=>{ if(e.target===$("sheet")) $("sheet").classList.remove("open"); });
   $("set-save").onclick=async ()=>{
     const hl=$("set-home").value.trim(), wl=$("set-work").value.trim();
@@ -1705,6 +1717,7 @@ restoreLock();
 setInterval(()=>{ if(!document.hidden) loadAll(); }, 30000);
 document.querySelectorAll("#dir-toggle .seg-btn").forEach(b=>{
   b.onclick=()=>{
+    tap();
     if(S.direction!==b.dataset.dir){
       S.direction=b.dataset.dir;
       unlockTripSilent();

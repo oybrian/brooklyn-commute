@@ -493,6 +493,7 @@ STATIONS.forEach(s=>{ ST_BY_ID[s.id]=s; });
 const $ = id=>document.getElementById(id);
 const num = v=>v==null?0:Number(v);
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function fmtClockShort(sec){ return fmtClock(sec).replace(/\s?[AP]M$/i,""); }
 function fmtClock(sec){ const d=new Date(sec*1000); const l=(typeof S!=="undefined"&&S.lang)||"en"; if(l==="ko"||l==="zh"||l==="ja"||l==="fr"){ return d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit",timeZone:TZ}); } return d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",timeZone:TZ}); }
 function fmtHM(){ return new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",second:"2-digit",timeZone:TZ}); }
 function tempBoth(f){ return Math.round(f)+"°F ("+Math.round((f-32)*5/9)+"°C)"; }
@@ -1186,7 +1187,7 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
       departOptionsCache.forEach((opt,i)=>{
         const btn=document.createElement("button");
         btn.className="seg-btn"+(i===departIdx?" sel":"");
-        btn.textContent=fmtClock(opt.leaveBy)+" → "+fmtClock(opt.trainBt)+" "+opt.legResults[0].leg.line;
+        btn.textContent=fmtClockShort(opt.leaveBy)+"-"+(opt.arriveDest!=null?fmtClockShort(opt.arriveDest):fmtClockShort(opt.trainBt));
         btn.onclick=(e)=>{ e.stopPropagation(); tap(); selectDepartOption(i, walkMin, arrWalkMin); };
         seg.appendChild(btn);
       });
@@ -1441,9 +1442,20 @@ async function loadAll(){
             if(bs) walkMin=await walkMinutes(o.lat,o.lon,bs.lat,bs.lon);
           }catch(e){}
         }
+        // final walk: last station -> destination (same for all departure options)
+        // manual times are symmetric: station->work ~= work->station
+        let arrWalkMin=S.direction==="commute"?S.walkHomebound:S.walkCommute;
+        if(arrWalkMin==null){
+          try{
+            const dest=S.direction==="commute"?S.work:S.home;
+            const ls=ST_BY_ID[legResults[legResults.length-1].leg.to];
+            if(dest.lat!=null&&dest.lon!=null&&ls) arrWalkMin=await walkMinutes(ls.lat,ls.lon,dest.lat,dest.lon);
+          }catch(e){}
+        }
         // Build up to 3 departure options from the next catchable trains.
         // Each option re-anchors the whole route on its train so transfers
         // and arrival all reflect that departure. Feeds are cached, not refetched.
+        // Label: leave-origin time - arrive-destination time (walks included).
         departOptionsCache=[];
         departIdx=0;
         if(walkMin!=null){
@@ -1454,7 +1466,9 @@ async function loadAll(){
             const lr=await computeRoute(legs, tr.bt-1);
             const at=lr[0]&&lr[0].trip;
             if(at&&!departOptionsCache.some(o=>Math.abs(o.trainBt-at.bt)<60)){
-              departOptionsCache.push({leaveBy:at.bt-walkMin*60, trainBt:at.bt, legResults:lr});
+              const lastTrip=lr[lr.length-1]&&lr[lr.length-1].trip;
+              const arriveDest=(lastTrip&&lastTrip.at&&arrWalkMin!=null)?lastTrip.at+arrWalkMin*60:null;
+              departOptionsCache.push({leaveBy:at.bt-walkMin*60, trainBt:at.bt, arriveDest:arriveDest, legResults:lr});
             }
           }
           if(departOptionsCache.length){
@@ -1468,16 +1482,6 @@ async function loadAll(){
             }catch(e){}
             legResults=departOptionsCache[departIdx].legResults;
           }
-        }
-        // final walk: last station -> destination (home/work arrival time)
-        // manual times are symmetric: station->work ~= work->station
-        let arrWalkMin=S.direction==="commute"?S.walkHomebound:S.walkCommute;
-        if(arrWalkMin==null){
-          try{
-            const dest=S.direction==="commute"?S.work:S.home;
-            const ls=ST_BY_ID[legResults[legResults.length-1].leg.to];
-            if(dest.lat!=null&&dest.lon!=null&&ls) arrWalkMin=await walkMinutes(ls.lat,ls.lon,dest.lat,dest.lon);
-          }catch(e){}
         }
         renderRoute(legResults, walkMin, arrWalkMin);
         const alts=hasDisruption(legResults)?await findFastRoutes(legResults):[];

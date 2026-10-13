@@ -1177,43 +1177,44 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
     const ub=lv.querySelector("#unlock-btn");
     if(ub) ub.onclick=(e)=>{ e.stopPropagation(); tap(); unlockTrip(); };
   }else if(walkMin!=null){
+    const mins=Math.round(walkMin);
+    // Leave-by time follows the selected departure option when available
+    let leaveBySec=null;
+    if(!isLocked&&departOptionsCache.length>=1){
+      leaveBySec=departOptionsCache[departIdx].leaveBy;
+    }else{
+      const allTrips=legResults[0].trips||(legResults[0].trip?[legResults[0].trip]:[]);
+      const nowSec=Date.now()/1000;
+      for(const tr of allTrips){
+        if(tr.bt-mins*60>=nowSec){ leaveBySec=tr.bt-mins*60; break; }
+      }
+    }
+    // Line 1: Leave by
     const lv=document.createElement("div");
     lv.className="leave-line";
+    lv.innerHTML=walkEmoji+(leaveBySec!=null?" Leave by <b>"+fmtClockShort(leaveBySec)+"</b>":"");
+    box.appendChild(lv);
+    // Line 2: departure options toggle (2+ options)
     if(!isLocked&&departOptionsCache.length>=2){
-      // Up to 3 departure options as a segmented toggle
-      lv.innerHTML=walkEmoji+'<div class="seg" id="depart-seg" style="margin:8px 0 4px;"></div>'
-        +'<button id="depart-btn" class="mini-btn">Depart →</button>';
-      const seg=lv.querySelector("#depart-seg");
+      const seg=document.createElement("div");
+      seg.className="seg";
+      seg.id="depart-seg";
+      seg.style.margin="8px 0 4px";
       departOptionsCache.forEach((opt,i)=>{
         const btn=document.createElement("button");
         btn.className="seg-btn"+(i===departIdx?" sel":"");
-        btn.textContent=fmtClockShort(opt.leaveBy)+"-"+(opt.arriveDest!=null?fmtClockShort(opt.arriveDest):fmtClockShort(opt.trainBt));
+        btn.textContent=fmtClockShort(opt.leaveBy)+"-"+(opt.arriveDest!=null?fmtClockShort(opt.arriveDest):"");
         btn.onclick=(e)=>{ e.stopPropagation(); tap(); selectDepartOption(i, walkMin, arrWalkMin); };
         seg.appendChild(btn);
       });
-    }else{
-      const mins=Math.round(walkMin);
-      let target=null;
-      if(departOptionsCache.length===1){
-        target={bt:departOptionsCache[0].trainBt};
-      }else{
-        const allTrips=legResults[0].trips||(legResults[0].trip?[legResults[0].trip]:[]);
-        const nowSec=Date.now()/1000;
-        for(const tr of allTrips){
-          if(tr.bt-mins*60>=nowSec){ target=tr; break; }
-        }
-      }
-      if(target){
-        const leaveBy=target.bt-mins*60;
-        lv.innerHTML=walkEmoji+" Leave by <b>"+fmtClock(leaveBy)+"</b> "
-          +'<button id="depart-btn" class="mini-btn">Depart →</button>';
-      }else{
-        // No catchable train right now, but still allow locking the displayed plan
-        lv.innerHTML=walkEmoji+' <button id="depart-btn" class="mini-btn">Depart →</button>';
-      }
+      box.appendChild(seg);
     }
-    box.appendChild(lv);
-    const db=lv.querySelector("#depart-btn");
+    // Line 3: Depart button
+    const dv=document.createElement("div");
+    dv.className="leave-line";
+    dv.innerHTML='<button id="depart-btn" class="mini-btn" style="margin-left:0">Depart →</button>';
+    box.appendChild(dv);
+    const db=dv.querySelector("#depart-btn");
     if(db) db.onclick=(e)=>{ e.stopPropagation(); tap(); lockTrip(legResults, walkMin, arrWalkMin); };
   }
   renderLegs(legResults, box);

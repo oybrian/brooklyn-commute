@@ -1198,7 +1198,8 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
       departOptionsCache.forEach((opt,i)=>{
         const btn=document.createElement("button");
         btn.className="seg-btn"+(i===departIdx?" sel":"");
-        btn.textContent=fmtClockShort(opt.leaveBy)+"-"+(opt.arriveDest!=null?fmtClockShort(opt.arriveDest):"");
+        const durMin=(opt.arriveDest!=null)?Math.round((opt.arriveDest-opt.leaveBy)/60):null;
+        btn.textContent=fmtClockShort(opt.leaveBy)+"-"+(opt.arriveDest!=null?fmtClockShort(opt.arriveDest):"")+(durMin!=null?" ("+durMin+"min)":"");
         btn.onclick=(e)=>{ e.stopPropagation(); tap(); selectDepartOption(i, walkMin, arrWalkMin); };
         seg.appendChild(btn);
       });
@@ -1449,7 +1450,7 @@ async function loadAll(){
             if(dest.lat!=null&&dest.lon!=null&&ls) arrWalkMin=await walkMinutes(ls.lat,ls.lon,dest.lat,dest.lon);
           }catch(e){}
         }
-        // Build up to 3 departure options from the next catchable trains.
+        // Build up to 2 departure options from the next catchable trains.
         // Each option re-anchors the whole route on its train so transfers
         // and arrival all reflect that departure. Feeds are cached, not refetched.
         // Label: leave-origin time - arrive-destination time (walks included).
@@ -1458,7 +1459,7 @@ async function loadAll(){
         if(walkMin!=null){
           const nowSec=Date.now()/1000;
           const trips=legResults[0].trips||[];
-          const catchable=trips.filter(tr=>tr.bt-walkMin*60>=nowSec).slice(0,3);
+          const catchable=trips.filter(tr=>tr.bt-walkMin*60>=nowSec).slice(0,2);
           for(const tr of catchable){
             const lr=await computeRoute(legs, tr.bt-1);
             const at=lr[0]&&lr[0].trip;

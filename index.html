@@ -1189,11 +1189,14 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
         if(tr.bt-mins*60>=nowSec){ leaveBySec=tr.bt-mins*60; break; }
       }
     }
-    // Line 1: Leave by
+    // Line 1: Leave by + Depart button (AM/PM on the Leave by time)
     const lv=document.createElement("div");
     lv.className="leave-line";
-    lv.innerHTML=walkEmoji+(leaveBySec!=null?" Leave by <b>"+fmtClockShort(leaveBySec)+"</b>":"");
+    lv.innerHTML=walkEmoji+(leaveBySec!=null?" Leave by <b>"+fmtClock(leaveBySec)+"</b>":"")
+      +' <button id="depart-btn" class="mini-btn">Depart →</button>';
     box.appendChild(lv);
+    const db=lv.querySelector("#depart-btn");
+    if(db) db.onclick=(e)=>{ e.stopPropagation(); tap(); lockTrip(legResults, walkMin, arrWalkMin); };
     // Line 2: departure options toggle (2+ options)
     if(!isLocked&&departOptionsCache.length>=2){
       const seg=document.createElement("div");
@@ -1209,13 +1212,6 @@ function renderRoute(legResults, walkMin, arrWalkMin, isLocked){
       });
       box.appendChild(seg);
     }
-    // Line 3: Depart button
-    const dv=document.createElement("div");
-    dv.className="leave-line";
-    dv.innerHTML='<button id="depart-btn" class="mini-btn" style="margin-left:0">Depart →</button>';
-    box.appendChild(dv);
-    const db=dv.querySelector("#depart-btn");
-    if(db) db.onclick=(e)=>{ e.stopPropagation(); tap(); lockTrip(legResults, walkMin, arrWalkMin); };
   }
   renderLegs(legResults, box);
   // final home/work arrival as its own line after the last card (like leave-by)
